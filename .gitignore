@@ -1,0 +1,60 @@
+# ------------------------------------------------
+# 1. OS & IDE (운영체제 및 에디터)
+# ------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.pem  
+
+# ------------------------------------------------
+# 2. Docker & Database
+# ------------------------------------------------
+db_data/
+*.log
+
+# ------------------------------------------------
+# 3. Backend (Spring Boot & Gradle)
+# ------------------------------------------------
+/backend/build/
+/backend/out/
+/backend/bin/
+/backend/.gradle/
+/backend/gradle-app.setting
+/backend/src/main/resources/application-secret.yml
+/backend/src/main/resources/application-real-db.yml
+
+# ------------------------------------------------
+# 4. Frontend (Next.js & React)
+# ------------------------------------------------
+# Next.js 빌드 및 의존성
+/frontend/.next/
+/frontend/node_modules/
+/frontend/build/
+/frontend/dist/
+/frontend/out/
+
+# 환경 변수 및 Vercel 설정
+/frontend/.env* 
+/frontend/.vercel    
+
+# TypeScript 및 기타 설정 (JS 프로젝트여도 자동 생성될 수 있음)
+/frontend/next-env.d.ts   
+/frontend/*.tsbuildinfo  
+
+# 로그 파일들
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ------------------------------------------------
+# 5. 기타
+# ------------------------------------------------
+tmp/
+temp/

@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  # ----------------------------------------
+  # MySQL Database 
+  # ----------------------------------------
+  db:
+    image: mysql:8.0
+    container_name: quizAi-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root  # 루트 비밀번호 (개발용)
+      MYSQL_DATABASE: quizAi   # 자동 생성될 DB 이름
+      MYSQL_USER: quizAi       # 사용할 계정 아이디
+      MYSQL_PASSWORD: quizAi0829@   # 사용할 계정 비밀번호
+      TZ: Asia/Seoul             # 한국 시간대 설정
+    ports:
+      - "3306:3306"              # 로컬 포트 : 컨테이너 포트
+    command: 
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - ./db_data:/var/lib/mysql 
