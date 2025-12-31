@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/ondongne?serverTimezone=Asia/Seoul
-    username: ondongne
-    password: ondongne0829@
+    url: jdbc:mysql://localhost:3306/quizAi?serverTimezone=Asia/Seoul
+    username: quizAi
+    password: quizAi0829@
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
