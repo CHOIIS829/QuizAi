@@ -3,6 +3,7 @@
 # ------------------------------------------------
 .DS_Store
 Thumbs.db
+.env
 .idea/
 .vscode/
 *.swp
@@ -28,6 +29,7 @@ db_data/
 /backend/gradle-app.setting
 /backend/src/main/resources/application-secret.yml
 /backend/src/main/resources/application-real-db.yml
+/backend/temp
 
 # ------------------------------------------------
 # 4. Frontend (Next.js & React)

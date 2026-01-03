@@ -1,8 +1,16 @@
+server:
+  port: 8080
+
 spring:
+  application:
+    name: quiz-ai
+
+  # 1. Database Configuration
   datasource:
-    url: jdbc:mysql://localhost:3306/quizAi?serverTimezone=Asia/Seoul
-    username: quizAi
-    password: quizAi0829@
+    # 한글 깨짐 방지(characterEncoding)와 SSL 경고 제거 옵션 추가
+    url: jdbc:mysql://localhost:3306/quizAi?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -12,3 +20,39 @@ spring:
     properties:
       hibernate:
         format_sql: true
+    # [권장] OSIV를 꺼서 DB 커넥션을 빨리 반환하도록 설정 (API 성능 최적화)
+    open-in-view: false
+
+  # 2. Redis Configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  # 3. File Upload Limits
+  servlet:
+    multipart:
+      max-file-size: 1GB
+      max-request-size: 1GB
+
+# 4. Monitoring (Actuator & Prometheus)
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: health, info, prometheus
+#  endpoint:
+#    health:
+#      show-details: always
+
+# 5. Custom Application Properties
+app:
+  gemini:
+    api-key: ${GEMINI_API_KEY}
+    model: gemini-1.5-flash
+
+  file:
+    temp-dir: ./temp/video
+
+  yt-dlp:
+    path: ${YT_DLP_PATH:yt-dlp}
