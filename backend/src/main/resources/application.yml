@@ -49,7 +49,7 @@ spring:
 app:
   gemini:
     api-key: ${GEMINI_API_KEY}
-    model: gemini-2.5-flash
+    model: gemini-flash-latest
 
   file:
     temp-dir: ./temp/video
