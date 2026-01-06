@@ -1,5 +1,7 @@
 package com.ondongne.backend.domain.quiz.service;
 
+import com.ondongne.backend.domain.gemini.service.GeminiService;
+import com.ondongne.backend.domain.quiz.dto.QuizResponseDto;
 import com.ondongne.backend.global.exception.FailCrawlException;
 import com.ondongne.backend.global.exception.FailDownloadException;
 import lombok.RequiredArgsConstructor;
@@ -27,17 +29,21 @@ public class QuizService {
     @Value("${app.yt-dlp.path}")
     private String ytDlpPath;
 
+    private final GeminiService geminiService;
+
     private static final Pattern YOUTUBE_PATTERN = Pattern.compile(
             "^(https?://)?(www\\.|m\\.)?(youtube\\.com|youtu\\.be)/(watch\\?v=|shorts/|embed/|v/)?([a-zA-Z0-9_-]{11}).*$"
     );
 
-    public String processQuiz(String url, int quizCount) {
+    public QuizResponseDto processQuiz(String url, int quizCount) {
         if(!isYoutubeUrl(url)) {
             log.info(">>>>> 감지된 콘텐즈 타입 : BLOG / WEB POST");
-            return crawlBlog(url);
+            String text = crawlBlog(url);
+            return geminiService.generateQuizFromText(text, quizCount);
         } else {
             log.info(">>>>> 감지된 콘텐즈 타입 : YOUTUBE VIDEO");
-            return downloadVideo(url);
+            String filePath = downloadVideo(url);
+            return geminiService.generateQuizFromVideo(filePath, quizCount);
         }
     }
 

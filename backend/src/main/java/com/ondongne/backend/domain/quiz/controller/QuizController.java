@@ -1,6 +1,7 @@
 package com.ondongne.backend.domain.quiz.controller;
 
 import com.ondongne.backend.domain.quiz.dto.QuizRequestDto;
+import com.ondongne.backend.domain.quiz.dto.QuizResponseDto;
 import com.ondongne.backend.domain.quiz.service.QuizService;
 import com.ondongne.backend.global.response.SuccessResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,14 +23,14 @@ public class QuizController {
     private final RestClient.Builder builder;
 
     @PostMapping("/generate")
-    public ResponseEntity<SuccessResponse<String>> generateQuiz(@RequestBody QuizRequestDto quizRequestDto) {
+    public ResponseEntity<SuccessResponse<QuizResponseDto>> generateQuiz(@RequestBody QuizRequestDto quizRequestDto) {
 
-        String processComplete = quizService.processQuiz(quizRequestDto.getUrl(), quizRequestDto.getQuizCount());
+        QuizResponseDto quizResponseDto = quizService.processQuiz(quizRequestDto.getUrl(), quizRequestDto.getQuizCount());
 
-        return ResponseEntity.ok(SuccessResponse.<String>builder()
+        return ResponseEntity.ok(SuccessResponse.<QuizResponseDto>builder()
                 .code(200)
                 .message("Success")
-                .data(processComplete)
+                .data(quizResponseDto)
                 .build());
     }
 }
