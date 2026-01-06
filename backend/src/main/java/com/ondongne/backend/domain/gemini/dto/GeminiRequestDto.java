@@ -61,6 +61,12 @@ public class GeminiRequestDto {
          * - "application/json": AI가 잡담 없이 순수 JSON 포맷으로만 응답하도록 강제합니다.
          */
         private String responseMimeType;
+        /**
+         * 창의성 조절 파라미터
+         * - 값이 클수록(예: 0.8~1.0) 더 창의적이고 다양성이 높은 응답을 생성합니다.
+         * - 값이 작을수록(예: 0.0~0.3) 더 일관되고 예측 가능한 응답을 생성합니다.
+         */
+        private Double temperature;
     }
 
     @Getter

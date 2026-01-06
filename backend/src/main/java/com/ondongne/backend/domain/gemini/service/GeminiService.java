@@ -65,8 +65,8 @@ public class GeminiService {
         // 2. 처리 대기 (시간 측정 포함됨)
         waitForProcessing(fileUri);
 
-        String prompt = "업로드된 비디오의 시청각 정보를 분석하여 학습용 퀴즈를 만들어줘. " +
-                "특히 화면에 나오는 코드나 도표가 중요하다면 timestamp도 함께 알려줘.";
+        String prompt = "업로드된 비디오의 시청각 정보를 분석하여 학습용 퀴즈를 만들어줘. ";
+//                "특히 화면에 나오는 코드나 도표가 중요하다면 timestamp도 함께 알려줘.";
 
         GeminiRequestDto.Part contentPart = GeminiRequestDto.Part.builder()
                 .fileData(new GeminiRequestDto.FileData("video/mp4", fileUri))
@@ -98,12 +98,14 @@ public class GeminiService {
                   "options": ["보기1", "보기2", "보기3", "보기4"],
                   "answer": "보기1",
                   "explanation": "해설",
-                  "timestamp": "05:23", 
                 }
               ]
             }
-            timestamp는 비디오 분석 시 시각적 자료가 중요할 때만 포함해.
-            모든 문제에 대해서 시작적자료가 필요하지는 않아.
+            각 문제는 다음 조건을 반드시 따라야 해:
+            문제의 지문은 명확하고 간결하게 작성하고,
+            동영상을 안본 사람도 지식을 가지고 있으면 풀 수 있을 정도로 만들어줘.
+            정답은 반드시 options에 포함된 보기 중 하나여야 해.
+            객관식과 주관식 모두 만들어줘.
             """, count);
 
         GeminiRequestDto request = GeminiRequestDto.builder()
@@ -116,6 +118,7 @@ public class GeminiService {
                         .build()))
                 .generationConfig(GeminiRequestDto.GenerationConfig.builder()
                         .responseMimeType("application/json")
+                        .temperature(0.85)
                         .build())
                 .build();
 

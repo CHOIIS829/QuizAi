@@ -27,7 +27,7 @@ public class QuizResponseDto {
         private String explanation;    // 해설
 
         // --- 비디오 전용 필드 ---
-        private String timestamp;      // 타임스탬프 (예: "05:23")
-        private List<Float> boundingBox; // [ymin, xmin, ymax, xmax]
+//        private String timestamp;      // 타임스탬프 (예: "05:23")
+//        private List<Float> boundingBox; // [ymin, xmin, ymax, xmax]
     }
 }
