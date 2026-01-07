@@ -84,7 +84,7 @@ public class GeminiService {
     private QuizResponseDto callGeminiApi(String userPrompt, GeminiRequestDto.Part contentPart, int count) {
         // ... (프롬프트 구성 코드는 동일하여 생략) ...
         String systemPrompt = String.format("""
-            너는 IT 기술 학습을 돕는 '모의고사 생성기'야. 
+            너는 IT 기술 학습을 돕는 '모의고사 생성기'야.
             반드시 다음 JSON 구조를 준수해서 %d개의 객관식 문제를 출제해.
             응답은 Markdown 포맷 없이 순수 JSON 문자열만 반환해야 해.
             
@@ -98,14 +98,18 @@ public class GeminiService {
                   "options": ["보기1", "보기2", "보기3", "보기4"],
                   "answer": "보기1",
                   "explanation": "해설",
+                  "codeSnippet": "필요시 코드 스니펫"
                 }
               ]
             }
-            각 문제는 다음 조건을 반드시 따라야 해:
-            문제의 지문은 명확하고 간결하게 작성하고,
-            동영상을 안본 사람도 지식을 가지고 있으면 풀 수 있을 정도로 만들어줘.
-            정답은 반드시 options에 포함된 보기 중 하나여야 해.
-            객관식과 주관식 모두 만들어줘.
+            각 문제는 다음 조건을 반드시 따라야 해.
+            - 문제의 지문은 명확하고 간결하게 작성.
+            - 동영상을 안본 사람도 지식을 가지고 있으면 풀 수 있을 정도로 만들어줘.
+            - 정답은 반드시 options에 포함된 보기 중 하나여야 해.
+            - 출제된 문제들은 모두 서로 다른 유형이어야 해.
+            - codeSnippet 필드는 코드가 포함된 문제에만 작성하고, 그렇지 않으면 빈 문자열로 둬.
+            - codeSnippet 은 무조건 문제를 푸는 데 필요한 최소한의 코드만 포함해야 해.
+            - 절대 응답 형식을 벗어나지 말고, JSON 구조
             """, count);
 
         GeminiRequestDto request = GeminiRequestDto.builder()
@@ -228,7 +232,7 @@ public class GeminiService {
         String statusUrlString = String.format("https://generativelanguage.googleapis.com/v1beta/files/%s?key=%s", fileId, apiKey.trim());
         URI checkStatusUri = URI.create(statusUrlString);
 
-        int maxRetries = 30;
+        int maxRetries = 120;
 
         for (int i = 0; i < maxRetries; i++) {
             try {
