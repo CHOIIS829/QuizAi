@@ -1,4 +1,4 @@
-import { BookOpen, Play, BrainCircuit } from "lucide-react";
+import { BookOpen, Play, BrainCircuit, AlertCircle } from "lucide-react";
 
 export default function InputSection({ url, setUrl, quizCount, setQuizCount, isLoading, onGenerate }) {
     return (
@@ -72,6 +72,20 @@ export default function InputSection({ url, setUrl, quizCount, setQuizCount, isL
                         </>
                     )}
                 </button>
+
+                <div className="mt-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-3 text-left animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    <div className="shrink-0 mt-0.5">
+                        <AlertCircle className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div className="text-sm text-amber-900 leading-relaxed">
+                        <p className="font-bold mb-1">안내사항</p>
+                        <p className="text-amber-700">
+                            영상 길이에 따라 최대 2분까지 소요될 수 있습니다.
+                            <br />
+                            너무 긴 영상의 경우 분석이 실패할 수 있습니다.
+                        </p>
+                    </div>
+                </div>
 
                 <div className="mt-6 text-center">
                     <p className="text-xs font-medium text-slate-400 flex items-center justify-center gap-1.5">
