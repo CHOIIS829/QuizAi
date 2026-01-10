@@ -43,9 +43,9 @@ dependencies {
     // 4. HTTP Client (Gemini API)
     implementation 'org.springframework.boot:spring-boot-starter-webflux' // [추가] WebClient
 
-    // 5. Monitoring (Prometheus/Grafana)
-//    implementation 'org.springframework.boot:spring-boot-starter-actuator' // [추가] 헬스 체크 및 메트릭
-//    implementation 'io.micrometer:micrometer-registry-prometheus'          // [추가] 프로메테우스 포맷 지원
+    // 5. Monitoring (Actuator for Health Check)
+    implementation 'org.springframework.boot:spring-boot-starter-actuator' // 헬스 체크용
+//    implementation 'io.micrometer:micrometer-registry-prometheus'          // 프로메테우스는 제외
 
     // 7. Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

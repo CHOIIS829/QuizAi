@@ -1,0 +1,26 @@
+name: Deploy to Home Server
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env file
+        run: |
+          if [ -n "${{ secrets.ENV_FILE_CONTENT }}" ]; then
+            echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
+          else
+            echo "Warning: ENV_FILE_CONTENT secret is not set."
+            touch .env
+          fi
+
+      - name: Run Deploy Script
+        run: |
+          chmod +x deploy.sh
+          ./deploy.sh
