@@ -13,6 +13,7 @@ COPY --from=builder /app/out /usr/share/nginx/html
 
 # Nginx 설정 파일 복사
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY nginx/service-url.inc /etc/nginx/conf.d/service-url.inc
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
