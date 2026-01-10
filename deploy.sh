@@ -49,12 +49,16 @@ do
   fi
 done
 
-echo "3. Change Nginx Upstream..."
+echo "3. Check & Start Frontend..."
+# 프론트엔드(Nginx) 컨테이너가 켜져 있는지 확인하고, 없거나 변경사항이 있으면 실행
+docker-compose up -d --build frontend
+
+echo "4. Change Nginx Upstream..."
 # Nginx 컨테이너 내부의 service-url.inc 파일 내용 변경
 docker exec quizAi-frontend /bin/sh -c "echo 'set \$service_url $TARGET_UPSTREAM' > $DEFAULT_CONF"
 docker exec quizAi-frontend nginx -s reload
 
-echo "4. Stop old service ($STOP_SERVICE)..."
+echo "5. Stop old service ($STOP_SERVICE)..."
 docker-compose stop $STOP_SERVICE
 docker-compose rm -f $STOP_SERVICE
 
