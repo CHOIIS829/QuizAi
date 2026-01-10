@@ -8,7 +8,7 @@ services:
     build: ./backend
     container_name: quizAi-backend-blue
     ports:
-      - "8080:8080"
+      - "8090:8080"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/${DATABASE_NAME}?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
       - SPRING_DATASOURCE_USERNAME=${DATABASE_USERNAME}
@@ -31,7 +31,7 @@ services:
     build: ./backend
     container_name: quizAi-backend-green
     ports:
-      - "8081:8080"
+      - "8091:8080"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/${DATABASE_NAME}?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
       - SPRING_DATASOURCE_USERNAME=${DATABASE_USERNAME}
@@ -54,7 +54,7 @@ services:
     build: ./frontend
     container_name: quizAi-frontend
     ports:
-      - "80:80"
+      - "90:80"
     depends_on:
       - backend-blue
       - backend-green

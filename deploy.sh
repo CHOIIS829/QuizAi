@@ -8,15 +8,15 @@ DEFAULT_CONF="/etc/nginx/conf.d/service-url.inc"
 
 if [ -z "$IS_GREEN" ];then
   echo "### Blue => Green ###"
-  CURRENT_PORT=8080
-  TARGET_PORT=8081
+  CURRENT_PORT=8090
+  TARGET_PORT=8091
   TARGET_SERVICE="backend-green"
   TARGET_UPSTREAM="http://backend-green:8080;"
   STOP_SERVICE="backend-blue"
 else
   echo "### Green => Blue ###"
-  CURRENT_PORT=8081
-  TARGET_PORT=8080
+  CURRENT_PORT=8091
+  TARGET_PORT=8090
   TARGET_SERVICE="backend-blue"
   TARGET_UPSTREAM="http://backend-blue:8080;"
   STOP_SERVICE="backend-green"
