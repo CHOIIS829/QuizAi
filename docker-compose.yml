@@ -7,6 +7,7 @@ services:
   backend-blue:
     build: ./backend
     container_name: quizAi-backend-blue
+    restart: always # 추가: 재부팅 시 자동 실행
     ports:
       - "8090:8080"
     environment:
@@ -30,6 +31,7 @@ services:
   backend-green:
     build: ./backend
     container_name: quizAi-backend-green
+    restart: always # 추가: 재부팅 시 자동 실행
     ports:
       - "8091:8080"
     environment:
@@ -53,6 +55,7 @@ services:
   frontend:
     build: ./frontend
     container_name: quizAi-frontend
+    restart: always # 추가: 재부팅 시 자동 실행
     ports:
       - "90:80"
     depends_on:
