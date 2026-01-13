@@ -3,8 +3,8 @@
 # ------------------------------------------------
 .DS_Store
 Thumbs.db
-.env
-.env_dev
+.env.prod
+.env.dev
 .idea/
 .vscode/
 *.swp
