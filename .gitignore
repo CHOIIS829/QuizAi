@@ -4,6 +4,7 @@
 .DS_Store
 Thumbs.db
 .env
+.env_dev
 .idea/
 .vscode/
 *.swp
@@ -11,7 +12,7 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
-*.pem  
+*.pem
 
 # ------------------------------------------------
 # 2. Docker & Database

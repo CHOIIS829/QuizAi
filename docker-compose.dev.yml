@@ -5,18 +5,19 @@ services:
   # 1. Backend (Dev Mode)
   # ----------------------------------------
   backend:
-    image: eclipse-temurin:17-jdk-jammy # 배포용 Dockerfile 대신 JDK 이미지 직접 사용
+    image: eclipse-temurin:17-jdk-jammy
     container_name: quizai-backend-dev
     working_dir: /app
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/${DATABASE_NAME}?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:${MYSQL_PORT}/${DATABASE_NAME}?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
       - SPRING_DATASOURCE_USERNAME=${DATABASE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${DATABASE_PASSWORD}
       - SPRING_DATA_REDIS_HOST=${REDIS_HOST}
       - SPRING_DATA_REDIS_PORT=${REDIS_PORT}
       - APP_GEMINI_API_KEY=${GEMINI_API_KEY}
+      - SPRING_PROFILES_ACTIVE=dev
     volumes:
       - ./backend:/app
       - ~/.gradle:/root/.gradle
@@ -38,9 +39,9 @@ services:
     ports:
       - "3000:80"
     volumes:
-      - ./frontend/out:/usr/share/nginx/html # 빌드된 정적 파일 마운트
+      - ./frontend/out:/usr/share/nginx/html
       - ./frontend/nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./frontend/nginx/service-url.inc:/etc/nginx/conf.d/service-url.inc # 배포용 설정 공유
+      - ./frontend/nginx/service-url.inc:/etc/nginx/conf.d/service-url.inc
     depends_on:
       - backend
     networks:
@@ -61,11 +62,11 @@ services:
       TZ: Asia/Seoul
     ports:
       - "3306:3306"
-    command: 
+    command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -84,7 +85,7 @@ services:
     ports:
       - "${REDIS_PORT}:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 5s
       retries: 5
