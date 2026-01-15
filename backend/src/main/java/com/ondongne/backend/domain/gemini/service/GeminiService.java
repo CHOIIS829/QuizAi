@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ondongne.backend.domain.gemini.dto.GeminiRequestDto;
 import com.ondongne.backend.domain.gemini.dto.GeminiResponseDto;
 import com.ondongne.backend.domain.quiz.dto.QuizResponseDto;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.File;
 import java.net.URI;
@@ -41,48 +39,38 @@ public class GeminiService {
 
     public QuizResponseDto generateQuizFromText(String text, int count) {
         log.info(">>>>> Gemini Text Request Start. Length: {}", text.length());
-        long startTime = System.currentTimeMillis(); // [시간 측정] 시작
 
-        String prompt = "다음 텍스트 내용을 분석하여 학습용 퀴즈를 만들어줘.";
+        String prompt = "제공된 텍스트의 핵심 내용을 심층 분석하여, 중요한 개념을 검증할 수 있는 고품질의 학습용 퀴즈를 만들어줘.";
         GeminiRequestDto.Part contentPart = GeminiRequestDto.Part.builder().text(text).build();
 
         QuizResponseDto response = callGeminiApi(prompt, contentPart, count);
-
-        long endTime = System.currentTimeMillis(); // [시간 측정] 종료
-        log.info(">>>>> 텍스트 퀴즈 생성 완료. 총 소요 시간: {}ms", (endTime - startTime));
 
         return response;
     }
 
     public QuizResponseDto generateQuizFromVideo(String filePath, int count) {
         log.info(">>>>> Gemini Video Request Start. File: {}", filePath);
-        long startTime = System.currentTimeMillis(); // [시간 측정] 전체 시작
 
-        // 1. 업로드 (시간 측정 포함됨)
+        // 1. 업로드
         String fileUri = uploadVideo(filePath);
         log.info(">>>>> 비디오 업로드 완료. File URI: {}", fileUri);
 
-        // 2. 처리 대기 (시간 측정 포함됨)
+        // 2. 처리 대기
         waitForProcessing(fileUri);
 
-        String prompt = "업로드된 비디오의 시청각 정보를 분석하여 학습용 퀴즈를 만들어줘. ";
-//                "특히 화면에 나오는 코드나 도표가 중요하다면 timestamp도 함께 알려줘.";
+        String prompt = "업로드된 비디오의 시청각 정보를 심층 분석하여, 중요한 개념을 검증할 수 있는 고품질의 학습용 퀴즈를 만들어줘.";
 
         GeminiRequestDto.Part contentPart = GeminiRequestDto.Part.builder()
                 .fileData(new GeminiRequestDto.FileData("video/mp4", fileUri))
                 .build();
 
-        // 3. 퀴즈 생성 (시간 측정 포함됨)
+        // 3. 퀴즈 생성
         QuizResponseDto response = callGeminiApi(prompt, contentPart, count);
-
-        long endTime = System.currentTimeMillis(); // [시간 측정] 전체 종료
-        log.info(">>>>> 비디오 퀴즈 생성 전체 완료. 총 소요 시간: {}ms", (endTime - startTime));
 
         return response;
     }
 
     private QuizResponseDto callGeminiApi(String userPrompt, GeminiRequestDto.Part contentPart, int count) {
-        // ... (프롬프트 구성 코드는 동일하여 생략) ...
         String systemPrompt = String.format("""
             너는 IT 기술 학습을 돕는 '모의고사 생성기'야.
             반드시 다음 JSON 구조를 준수해서 %d개의 객관식 문제를 출제해.
@@ -104,12 +92,12 @@ public class GeminiService {
             }
             각 문제는 다음 조건을 반드시 따라야 해.
             - 문제의 지문은 명확하고 간결하게 작성.
-            - 동영상을 안본 사람도 지식을 가지고 있으면 풀 수 있을 정도로 만들어줘.
+            - 동영상이나 택스트를 안본 사람도 지식을 가지고 있으면 풀 수 있을 정도로 만들어줘.
             - 정답은 반드시 options에 포함된 보기 중 하나여야 해.
             - 출제된 문제들은 모두 서로 다른 유형이어야 해.
             - codeSnippet 필드는 코드가 포함된 문제에만 작성하고, 그렇지 않으면 빈 문자열로 둬.
             - codeSnippet 은 무조건 문제를 푸는 데 필요한 최소한의 코드만 포함해야 해.
-            - 절대 응답 형식을 벗어나지 말고, JSON 구조
+            - 절대 응답 형식을 벗어나지 말고, JSON 형식에 맞지 않는 어떠한 설명도 추가하지 마.
             """, count);
 
         GeminiRequestDto request = GeminiRequestDto.builder()
@@ -132,8 +120,6 @@ public class GeminiService {
 
         log.info(">>>>> Calling Gemini API URI: {}", uri);
 
-        long startTime = System.currentTimeMillis(); // [시간 측정] API 호출 시작
-
         try {
             GeminiResponseDto response = webClientBuilder.build()
                     .post()
@@ -143,9 +129,6 @@ public class GeminiService {
                     .retrieve()
                     .bodyToMono(GeminiResponseDto.class)
                     .block();
-
-            long endTime = System.currentTimeMillis(); // [시간 측정] API 응답 수신
-            log.info(">>>>> Gemini API 응답 수신 완료. 소요 시간: {}ms", (endTime - startTime));
 
             if (response == null || response.getCandidates() == null || response.getCandidates().isEmpty()) {
                 throw new RuntimeException("Gemini API 응답이 비어있습니다.");
@@ -163,7 +146,6 @@ public class GeminiService {
     }
 
     private String uploadVideo(String localFilePath) {
-        long startTime = System.currentTimeMillis(); // [시간 측정] 업로드 시작
 
         File file = new File(localFilePath);
         if (!file.exists()) {
@@ -215,16 +197,11 @@ public class GeminiService {
         }
 
         Map<String, Object> fileInfo = (Map<String, Object>) response.get("file");
-        String fileUri = (String) fileInfo.get("uri");
 
-        long endTime = System.currentTimeMillis(); // [시간 측정] 업로드 완료
-        log.info(">>>>> 파일 업로드 프로세스 완료. 소요 시간: {}ms", (endTime - startTime));
-
-        return fileUri;
+        return (String) fileInfo.get("uri");
     }
 
     private void waitForProcessing(String fileUri) {
-        long startTime = System.currentTimeMillis(); // [시간 측정] 대기 시작
 
         WebClient client = webClientBuilder.build();
         String fileId = fileUri.substring(fileUri.lastIndexOf("/") + 1);
@@ -248,8 +225,6 @@ public class GeminiService {
                 log.info(">>>>> Video Processing State: {}", state);
 
                 if ("ACTIVE".equals(state)) {
-                    long endTime = System.currentTimeMillis(); // [시간 측정] 처리 완료
-                    log.info(">>>>> 비디오 처리 완료(ACTIVE). 대기 시간: {}ms", (endTime - startTime));
                     return;
                 } else if ("FAILED".equals(state)) {
                     throw new RuntimeException("비디오 처리에 실패했습니다.");

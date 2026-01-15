@@ -36,8 +36,6 @@ public class QuizService {
     );
 
     public QuizResponseDto processQuiz(String url, int quizCount) {
-        // 전체 프로세스 시작 시간 측정
-        long startTime = System.currentTimeMillis();
 
         QuizResponseDto response;
 
@@ -51,10 +49,6 @@ public class QuizService {
             response = geminiService.generateQuizFromVideo(filePath, quizCount);
         }
 
-        // 전체 프로세스 종료 및 시간 계산
-        long endTime = System.currentTimeMillis();
-        log.info(">>>>> Quiz 생성 전체 프로세스 완료! 소요 시간: {}ms", (endTime - startTime));
-
         return response;
     }
 
@@ -62,13 +56,10 @@ public class QuizService {
     private String downloadVideo(String url) {
         createTempDirectory();
 
-        String fileName = UUID.randomUUID().toString() + ".mp4";
-        String filePath = tempDir + File.separator + fileName;
+        String fileName = UUID.randomUUID().toString() + ".mp4"; // ex) uuid.mp4
+        String filePath = tempDir + File.separator + fileName; // ex) /temp/video/uuid.mp4
 
         log.info(">>>>> 다운로드 시작... 저장 경로: {}", filePath);
-
-        // 다운로드 시작 시간 측정
-        long startTime = System.currentTimeMillis();
 
         try {
             ProcessBuilder builder = new ProcessBuilder(
@@ -90,16 +81,9 @@ public class QuizService {
 
             int exitCode = process.waitFor();
 
-            // 다운로드 종료 시간 측정 및 계산
-            long endTime = System.currentTimeMillis();
-            long duration = endTime - startTime;
-
             if (exitCode != 0) {
-                log.error(">>>>> 다운로드 실패 (소요 시간: {}ms)", duration);
                 throw new FailDownloadException();
             }
-
-            log.info(">>>>> 영상 다운로드 완료! 경로: {}, 소요 시간: {}ms", filePath, duration);
 
             return new File(filePath).getAbsolutePath();
 
@@ -109,7 +93,6 @@ public class QuizService {
         }
     }
 
-    // createTempDirectory는 변경 사항 없음
     private void createTempDirectory() {
         File directory = new File(tempDir);
         if (!directory.exists()) {
@@ -122,9 +105,6 @@ public class QuizService {
     }
 
     private String crawlBlog(String url) {
-        // 크롤링 시작 시간 측정
-        long startTime = System.currentTimeMillis();
-
         try {
             log.info(">>>>> 크롤링 시작: {}", url);
 
@@ -133,25 +113,41 @@ public class QuizService {
                     .timeout(10000)
                     .get();
 
-            doc.select("script, style, header, footer, nav, aside, iframe, .sidebar, .comment, .advertisement, .ads").remove();
+            if (url.contains("blog.naver.com")) {
+                Element iframe = doc.select("iframe#mainFrame").first();
+                if (iframe != null) {
+                    String realUrl = "https://blog.naver.com" + iframe.attr("src");
+                    log.info(">>>>> 네이버 iframe 감지. 진짜 주소로 재접속: {}", realUrl);
+
+                    doc = Jsoup.connect(realUrl)
+                            .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) ...")
+                            .timeout(10000)
+                            .get();
+                }
+            }
+
+            doc.select("script, style, header, footer, nav, aside, iframe, .sidebar, .comment, .advertisement, .ads, .cookie-banner").remove();
 
             Element content = null;
             String[] selectors = {
-                    "article", "main", ".post-content", ".entry-content",
+                    ".se-main-container", // 네이버 스마트에디터 본문
+                    "article", "main",
+                    ".tt_article_useless_p_margin", // 티스토리 본문
+                    ".post-content", ".entry-content",
                     ".markdown-body", "div[role='main']", "#content", ".content"
             };
 
             for (String selector : selectors) {
                 content = doc.selectFirst(selector);
-                if (content != null && content.text().length() > 50) {
+                if (content != null && content.text().length() > 100) {
                     log.info(">>>>> 본문 영역 감지됨: {}", selector);
                     break;
                 }
             }
 
             if (content == null) {
-                log.warn(">>>>> 명시적인 본문 영역을 찾지 못해 전체 body를 사용합니다.");
-                content = doc.body();
+                log.warn(">>>>> 명시적인 본문 영역을 찾지 못했습니다.");
+                throw new FailCrawlException();
             }
 
             String text = content.text().trim();
@@ -160,14 +156,10 @@ public class QuizService {
                 throw new FailCrawlException();
             }
 
-            // 크롤링 종료 시간 측정 및 계산
-            long endTime = System.currentTimeMillis();
-            log.info(">>>>> 크롤링 완료. 텍스트 길이: {}, 소요 시간: {}ms", text.length(), (endTime - startTime));
-
             return text;
 
         } catch (Exception e) {
-            log.error(">>>>> 크롤링 중 오류 발생", e);
+            log.error(">>>>> 크롤링 중 오류 발생: {}", e.getMessage());
             throw new FailCrawlException();
         }
     }
