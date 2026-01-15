@@ -2,6 +2,7 @@ package com.ondongne.backend.domain.quiz.service;
 
 import com.ondongne.backend.domain.gemini.service.GeminiService;
 import com.ondongne.backend.domain.quiz.dto.QuizResponseDto;
+import com.ondongne.backend.domain.quiz.dto.QuizResultDto;
 import com.ondongne.backend.global.exception.FailCrawlException;
 import com.ondongne.backend.global.exception.FailDownloadException;
 import lombok.RequiredArgsConstructor;
@@ -37,16 +38,16 @@ public class QuizService {
 
     public QuizResponseDto processQuiz(String url, int quizCount) {
 
-        QuizResponseDto response;
+        QuizResultDto response;
 
         if(!isYoutubeUrl(url)) {
             log.info(">>>>> 감지된 콘텐츠 타입 : BLOG / WEB POST");
             String text = crawlBlog(url);
-            response = geminiService.generateQuizFromText(text, quizCount);
+            geminiService.generateQuizFromText(text, quizCount);
         } else {
             log.info(">>>>> 감지된 콘텐츠 타입 : YOUTUBE VIDEO");
             String filePath = downloadVideo(url);
-            response = geminiService.generateQuizFromVideo(filePath, quizCount);
+            geminiService.generateQuizFromVideo(filePath, quizCount);
         }
 
         return response;
