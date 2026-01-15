@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class ExceptionController {
 
-    @ExceptionHandler
-    public ResponseEntity<ErrorResponse> handleException(BaseException e) {
+    @ExceptionHandler(BaseException.class)
+    public ResponseEntity<ErrorResponse> handleBaseException(BaseException e) {
         log.error(">>>>> [ERROR] code : {}, message : {}", e.getStatusCode(), e.getMessage());
 
         ErrorResponse body = ErrorResponse.builder()
@@ -22,5 +22,18 @@ public class ExceptionController {
                 .build();
 
         return ResponseEntity.status(e.getStatusCode()).body(body);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGlobalException(Exception e) {
+        log.error(">>>>> [ERROR] message : {}", e.getMessage(), e);
+
+        ErrorResponse body = ErrorResponse.builder()
+                .code(500)
+                .message("서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
+                .errorCode("INTERNAL_SERVER_ERROR")
+                .build();
+
+        return ResponseEntity.status(500).body(body);
     }
 }
