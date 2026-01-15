@@ -2,7 +2,7 @@ package com.ondongne.backend.domain.quiz.service;
 
 import com.ondongne.backend.domain.gemini.service.GeminiService;
 import com.ondongne.backend.domain.quiz.dto.QuizResponseDto;
-import com.ondongne.backend.domain.quiz.dto.QuizResultDto;
+import com.ondongne.backend.domain.quiz.repository.JobRedisRepository;
 import com.ondongne.backend.global.exception.FailCrawlException;
 import com.ondongne.backend.global.exception.FailDownloadException;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +31,7 @@ public class QuizService {
     private String ytDlpPath;
 
     private final GeminiService geminiService;
+    private final JobRedisRepository jobRedisRepository;
 
     private static final Pattern YOUTUBE_PATTERN = Pattern.compile(
             "^(https?://)?(www\\.|m\\.)?(youtube\\.com|youtu\\.be)/(watch\\?v=|shorts/|embed/|v/)?([a-zA-Z0-9_-]{11}).*$"
@@ -38,19 +39,27 @@ public class QuizService {
 
     public QuizResponseDto processQuiz(String url, int quizCount) {
 
-        QuizResultDto response;
+        String jobId = UUID.randomUUID().toString();
+
+        QuizResponseDto data = QuizResponseDto.builder()
+                .jobId(jobId)
+                .status(QuizResponseDto.JobStatus.PROCESSING)
+                .message("퀴즈 생성이 진행 중입니다.")
+                .build();
+
+        jobRedisRepository.save(jobId, data);
 
         if(!isYoutubeUrl(url)) {
             log.info(">>>>> 감지된 콘텐츠 타입 : BLOG / WEB POST");
             String text = crawlBlog(url);
-            geminiService.generateQuizFromText(text, quizCount);
+            geminiService.generateQuizFromText(jobId, text, quizCount);
         } else {
             log.info(">>>>> 감지된 콘텐츠 타입 : YOUTUBE VIDEO");
             String filePath = downloadVideo(url);
-            geminiService.generateQuizFromVideo(filePath, quizCount);
+            geminiService.generateQuizFromVideo(jobId, filePath, quizCount);
         }
 
-        return response;
+        return data;
     }
 
 
@@ -163,6 +172,10 @@ public class QuizService {
             log.error(">>>>> 크롤링 중 오류 발생: {}", e.getMessage());
             throw new FailCrawlException();
         }
+    }
+
+    public QuizResponseDto getQuizStatus(String jobId) {
+        return jobRedisRepository.findById(jobId);
     }
 
     private boolean isYoutubeUrl(String url) {

@@ -12,11 +12,10 @@ public class QuizResponseDto {
     private String jobId;
     private JobStatus status;
     private QuizResultDto result;
-    private String errorMessage;
+    private String message;
 
     public enum JobStatus {
-        PENDING,
-        IN_PROGRESS,
+        PROCESSING,
         COMPLETED,
         FAILED
     }
