@@ -40,7 +40,27 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to generate quiz");
+        // 에러 응답 파싱
+        const errorData = await response.json().catch(() => null);
+
+        if (errorData && errorData.errorCode) {
+          switch (errorData.errorCode) {
+            case "FAIL_CRAWL":
+              alert("퀴즈 생성이 불가능한 URL입니다.");
+              break;
+            case "FAIL_DOWNLOAD":
+              alert("영상의 길이가 너무 깁니다. \n다른 영상으로 시도해주세요.");
+              break;
+            case "GEMINI_FAIL_ERROR":
+              alert("현재 요청이 많아 잠시 후 다시 시도해주세요.");
+              break;
+            default:
+              alert(`오류가 발생했습니다: ${errorData.message}`);
+          }
+          return; // 에러 처리 완료 후 종단
+        }
+
+        throw new Error("서버와의 통신에 실패했습니다.");
       }
 
       const result = await response.json();
@@ -50,7 +70,8 @@ export default function Home() {
       setUserAnswers({});
     } catch (error) {
       console.error("Error:", error);
-      alert(`문제 생성 중 오류가 발생했습니다: ${error.message}`);
+      // 위에서 처리되지 않은 일반적인 에러만 여기서 처리
+      alert(`문제 생성 중 알 수 없는 오류가 발생했습니다: ${error.message}`);
     } finally {
       setIsLoading(false);
     }

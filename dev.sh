@@ -5,4 +5,4 @@
 COMMAND=${1:-up}
 
 echo "Starting Backend & Frontend in DEV mode..."
-docker-compose -f docker-compose.dev.yml --env-file .env_dev $COMMAND -d --build
+docker-compose -f docker-compose.dev.yml --env-file .env.dev $COMMAND -d --build
