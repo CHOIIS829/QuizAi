@@ -80,7 +80,7 @@ export default function InputSection({ url, setUrl, quizCount, setQuizCount, isL
                     <div className="text-sm text-amber-900 leading-relaxed">
                         <p className="font-bold mb-1">안내사항</p>
                         <p className="text-amber-700">
-                            영상 길이에 따라 최대 2분까지 소요될 수 있습니다.
+                            영상 길이에 따라 분석 시간이 달라질 수 있습니다.
                             <br />
                             너무 긴 영상의 경우 분석이 실패할 수 있습니다.
                         </p>
@@ -90,7 +90,7 @@ export default function InputSection({ url, setUrl, quizCount, setQuizCount, isL
                 <div className="mt-6 text-center">
                     <p className="text-xs font-medium text-slate-400 flex items-center justify-center gap-1.5">
                         <BrainCircuit className="w-3.5 h-3.5" />
-                        Powered by Google Gemini 1.5 Pro
+                        Powered by Google Gemini
                     </p>
                 </div>
             </div>

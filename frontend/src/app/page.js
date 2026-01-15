@@ -76,7 +76,7 @@ export default function Home() {
   };
 
   const pollJobStatus = async (apiBaseUrl, jobId) => {
-    const maxRetries = 60; // 최대 2분 대기 (2초 * 60)
+    const maxRetries = 300; // 최대 10분 대기 (2초 * 300)
     let retryCount = 0;
 
     while (retryCount < maxRetries) {
