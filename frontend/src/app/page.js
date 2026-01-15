@@ -24,11 +24,12 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      const apiUrl = process.env.NODE_ENV === 'development'
-        ? "http://localhost:8080/api/quiz/generate"
-        : "/api/quiz/generate";
+      const apiBaseUrl = process.env.NODE_ENV === 'development'
+        ? "http://localhost:8080"
+        : "";
 
-      const response = await fetch(apiUrl, {
+      // 1. 퀴즈 생성 요청 (Job 시작)
+      const startResponse = await fetch(`${apiBaseUrl}/api/quiz/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -39,42 +40,73 @@ export default function Home() {
         }),
       });
 
-      if (!response.ok) {
-        // 에러 응답 파싱
-        const errorData = await response.json().catch(() => null);
-
-        if (errorData && errorData.errorCode) {
-          switch (errorData.errorCode) {
-            case "FAIL_CRAWL":
-              alert("퀴즈 생성이 불가능한 URL입니다.");
-              break;
-            case "FAIL_DOWNLOAD":
-              alert("영상의 길이가 너무 깁니다. \n다른 영상으로 시도해주세요.");
-              break;
-            case "GEMINI_FAIL_ERROR":
-              alert("현재 요청이 많아 잠시 후 다시 시도해주세요.");
-              break;
-            default:
-              alert(`오류가 발생했습니다: ${errorData.message}`);
-          }
-          return; // 에러 처리 완료 후 종단
-        }
-
-        throw new Error("서버와의 통신에 실패했습니다.");
+      if (!startResponse.ok) {
+        throw await createErrorFromResponse(startResponse);
       }
 
-      const result = await response.json();
-      setQuizData(result.data);
-      setStep("QUIZ");
-      setCurrentQuestionIndex(0);
-      setUserAnswers({});
+      const startResult = await startResponse.json();
+      const jobId = startResult.data.jobId;
+
+      // 2. 폴링 시작 (Job 상태 확인)
+      await pollJobStatus(apiBaseUrl, jobId);
+
     } catch (error) {
       console.error("Error:", error);
-      // 위에서 처리되지 않은 일반적인 에러만 여기서 처리
-      alert(`문제 생성 중 알 수 없는 오류가 발생했습니다: ${error.message}`);
+      alert(error.message || "문제 생성 중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const createErrorFromResponse = async (response) => {
+    const errorData = await response.json().catch(() => null);
+    if (errorData && errorData.errorCode) {
+      switch (errorData.errorCode) {
+        case "FAIL_CRAWL":
+          return new Error("퀴즈 생성이 불가능한 URL입니다.");
+        case "FAIL_DOWNLOAD":
+          return new Error("영상의 길이가 너무 깁니다. \n다른 영상으로 시도해주세요.");
+        case "GEMINI_FAIL_ERROR":
+          return new Error("현재 요청이 많아 잠시 후 다시 시도해주세요.");
+        default:
+          return new Error(errorData.message || "오류가 발생했습니다.");
+      }
+    }
+    return new Error("서버와의 통신에 실패했습니다.");
+  };
+
+  const pollJobStatus = async (apiBaseUrl, jobId) => {
+    const maxRetries = 60; // 최대 2분 대기 (2초 * 60)
+    let retryCount = 0;
+
+    while (retryCount < maxRetries) {
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2초 대기
+
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/quiz/status/${jobId}`);
+        if (!response.ok) {
+          throw await createErrorFromResponse(response);
+        }
+
+        const result = await response.json();
+        const { status, result: quizResult, message } = result.data;
+
+        if (status === "COMPLETED" && quizResult) {
+          setQuizData(quizResult);
+          setStep("QUIZ");
+          setCurrentQuestionIndex(0);
+          setUserAnswers({});
+          return; // 성공 종료
+        } else if (status === "FAILED") {
+          throw new Error(message || "퀴즈 생성에 실패했습니다.");
+        }
+        // PROCESSING 상태면 계속 루프
+      } catch (error) {
+        throw error; // 에러 발생 시 상위 catch로 전달
+      }
+      retryCount++;
+    }
+    throw new Error("작업 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.");
   };
 
   const handleOptionSelect = (questionId, option) => {
