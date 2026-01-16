@@ -167,6 +167,8 @@ public class QuizService {
                 ProcessBuilder builder = new ProcessBuilder(
                         ytDlpPath,
                         "-f", "worst[ext=mp4]",
+                        "--force-ipv4",
+                        "--extractor-args", "youtube:player_client=android",
                         "-o", filePath,
                         url
                 );
