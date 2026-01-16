@@ -68,6 +68,7 @@ public class GeminiService {
         log.info(">>>>> Gemini Video Request Start. File: {}", filePath);
 
         uploadVideoAsync(filePath)
+                .doFinally(signalType -> deleteLocalFile(filePath)) // [추가] 업로드 종료(성공/실패) 후 즉시 파일 삭제
                 .flatMap(fileUri -> {
                     log.info(">>>>> [Job: {}] 업로드 완료. URI: {}. 처리 대기 시작...", jobId, fileUri);
                     // 2. 비동기 처리 대기 (Processing 상태 확인)
@@ -127,6 +128,7 @@ private Mono<QuizResultDto> callGeminiApi(String userPrompt, GeminiRequestDto.Pa
             - 출제된 문제들은 모두 서로 다른 유형이어야 해.
             - codeSnippet 필드는 코드가 포함된 문제에만 작성하고, 그렇지 않으면 빈 문자열로 둬.
             - codeSnippet 은 무조건 문제를 푸는 데 필요한 최소한의 코드만 포함해야 해.
+            - codeSnippet 에는 답이랑 직접적으로 연결되는 부분이 포함되어서는 안돼.
             - 절대 응답 형식을 벗어나지 말고, JSON 형식에 맞지 않는 어떠한 설명도 추가하지 마.
             """, count);
 
@@ -256,6 +258,21 @@ private Mono<QuizResultDto> callGeminiApi(String userPrompt, GeminiRequestDto.Pa
                         .doBeforeRetry(retrySignal -> log.info(">>>>> 처리 중... 재시도 횟수: {}", retrySignal.totalRetries()))
                 )
                 .then(); // 결과값은 필요 없으니 Void로 변환
+    }
+
+    private void deleteLocalFile(String filePath) {
+        try {
+            File file = new File(filePath);
+            if (file.exists()) {
+                if (file.delete()) {
+                    log.info(">>>>> 로컬 임시 파일 삭제 완료: {}", filePath);
+                } else {
+                    log.warn(">>>>> 로컬 임시 파일 삭제 실패: {}", filePath);
+                }
+            }
+        } catch (Exception e) {
+            log.warn(">>>>> 로컬 파일 삭제 중 에러 무시: {}", e.getMessage());
+        }
     }
 
     private static class ProcessingNotFinishedException extends RuntimeException {}
