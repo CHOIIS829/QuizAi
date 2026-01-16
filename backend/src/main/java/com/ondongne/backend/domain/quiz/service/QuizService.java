@@ -177,7 +177,7 @@ public class QuizService {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        log.debug("[yt-dlp] {}", line);
+                        log.info("[yt-dlp] {}", line);
                     }
                 }
 
