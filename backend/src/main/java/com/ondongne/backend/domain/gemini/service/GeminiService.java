@@ -102,35 +102,43 @@ public class GeminiService {
     }
 
 private Mono<QuizResultDto> callGeminiApi(String userPrompt, GeminiRequestDto.Part contentPart, int count) {
-        String systemPrompt = String.format("""
-            너는 IT 기술 학습을 돕는 '모의고사 생성기'야.
-            반드시 다음 JSON 구조를 준수해서 %d개의 객관식 문제를 출제해.
-            응답은 Markdown 포맷 없이 순수 JSON 문자열만 반환해야 해.
-            
-            JSON 구조 예시:
+    String systemPrompt = String.format("""
+        너는 IT 기술 학습을 돕는 숙련된 '모의고사 출제자'야.
+        제공된 내용을 심층 분석하여 학습자가 내용을 완벽히 이해했는지 검증할 수 있는 수준 높은 객관식 문제 %d개를 출제해.
+        
+        [1. 문제 내용 및 품질 규칙] (★기존 요구사항 반영)
+        - **지문 품질**: 문제는 명확하고 간결해야 하며, 모호한 표현을 피할 것.
+        - **지식 기반**: 제공된 자료(영상/텍스트)를 보지 않았더라도, 해당 IT 개념을 알고 있는 사람이라면 풀 수 있는 '보편적 지식'을 묻는 문제여야 해. (단순한 영상 내용 기억력 테스트 금지)
+        - **유형 다양성**: 단순 정의 묻기뿐만 아니라, 코드 분석, 상황 판단, 장단점 비교 등 서로 다른 유형의 문제들을 섞어서 출제해.
+        - **정답 보장**: 정답은 반드시 제공된 4개의 보기(options) 안에 포함되어야 해.
+        
+        [2. 형식 및 기술적 제약 사항]
+        - **출력 형식**: 오직 순수한 JSON 문자열만 반환해. (Markdown 코드 블록(```json)이나 불필요한 서론/결론 절대 금지)
+        - **언어**: 모든 내용은 '한국어'로 작성해.
+        - **보기 개수**: 모든 문제의 보기(options)는 정확히 4개씩 제공해.
+        
+        [3. 코드 스니펫 작성 규칙] (★정답 유출 방지)
+        - 코드가 필요한 문제에만 `codeSnippet`을 작성하고, 불필요하면 빈 문자열("")로 둬.
+        - `codeSnippet`은 문제를 푸는 데 필요한 최소한의 코드만 포함해.
+        - **핵심 규칙**: 만약 문제의 정답이 코드의 특정 부분(메서드명, 키워드 등)이라면, 해당 부분은 절대 코드에 노출하지 마.
+        - 대신 그 자리를 '_____' (밑줄 5개)로 대체하여 빈칸 채우기 문제로 만들어.
+        - 예시: 정답이 `filter`라면, 코드는 `.filter(...)`가 아니라 `._____(...)`로 작성해야 해.
+        
+        [4. JSON 구조 예시]
+        {
+          "title": "주제 제목",
+          "questions": [
             {
-              "title": "주제 제목",
-              "questions": [
-                {
-                  "id": 1,
-                  "question": "문제 지문",
-                  "options": ["보기1", "보기2", "보기3", "보기4"],
-                  "answer": "보기1",
-                  "explanation": "해설",
-                  "codeSnippet": "필요시 코드 스니펫"
-                }
-              ]
+              "id": 1,
+              "question": "다음 스트림 API 코드의 빈칸에 들어갈 알맞은 중개 연산은?",
+              "options": ["map", "filter", "sorted", "limit"],
+              "answer": "filter",
+              "explanation": "조건에 맞는 요소만 걸러내기 위해서는 filter를 사용합니다.",
+              "codeSnippet": "list.stream()._____(x -> x > 10).collect(Collectors.toList());"
             }
-            각 문제는 다음 조건을 반드시 따라야 해.
-            - 문제의 지문은 명확하고 간결하게 작성.
-            - 동영상이나 택스트를 안본 사람도 지식을 가지고 있으면 풀 수 있을 정도로 만들어줘.
-            - 정답은 반드시 options에 포함된 보기 중 하나여야 해.
-            - 출제된 문제들은 모두 서로 다른 유형이어야 해.
-            - codeSnippet 필드는 코드가 포함된 문제에만 작성하고, 그렇지 않으면 빈 문자열로 둬.
-            - codeSnippet 은 무조건 문제를 푸는 데 필요한 최소한의 코드만 포함해야 해.
-            - codeSnippet 에는 답이랑 직접적으로 연결되는 부분이 포함되어서는 안돼.
-            - 절대 응답 형식을 벗어나지 말고, JSON 형식에 맞지 않는 어떠한 설명도 추가하지 마.
-            """, count);
+          ]
+        }
+    """, count);
 
         GeminiRequestDto request = GeminiRequestDto.builder()
                 .systemInstruction(GeminiRequestDto.SystemInstruction.builder()
