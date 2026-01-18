@@ -94,7 +94,7 @@ Gemini AI가 콘텐츠를 분석하여 즉시 퀴즈를 생성합니다.
 ## 🧩 시스템 아키텍처 (Architecture)
 
 <p align="center">
-  <img width="1200" src="https://github.com/user-attachments/assets/fa48c8bf-40e1-4a74-99cd-794fdca40e48" />
+  <img width="1020" height="967" alt="Image" src="https://github.com/user-attachments/assets/e16f4b49-bdd4-4bed-9278-442089fc3067" />
 </p>
 
 ---
