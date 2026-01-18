@@ -51,7 +51,7 @@ Gemini AI가 콘텐츠를 분석하여 즉시 퀴즈를 생성합니다.
 </p>
 
 ### 4. 퀴즈 풀이
-- 생성된 문제를 풀며 학습 내용을 점검합니다. 헷갈리는 문제는 즉시 정답 확인이 가능합니다.
+- 생성된 문제를 풀며 학습 내용을 점검합니다.
 <p align="center">
   <img width="800" alt="Image" src="https://github.com/user-attachments/assets/ad431f99-5f50-49c6-b773-b820ba56cf16" />
 </p>
