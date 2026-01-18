@@ -1,0 +1,148 @@
+# 🧠 QuizAi - 나만의 AI 튜터
+> **URL 하나로 끝내는 맞춤형 학습.**  
+> 기술 블로그, 유튜브 영상을 분석하여 핵심 퀴즈를 자동으로 생성해주는 AI 기반 학습 플랫폼입니다.
+
+| Category | Tech Stack |
+| :--- | :--- |
+| **Language** | [![Java](https://img.shields.io/badge/Java-17-007396?style=for-the-badge&logo=java&logoColor=white)](https://www.java.com/) |
+| **Backend** | [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.8-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot) [![Google Gemini](https://img.shields.io/badge/Google_Gemini-AI-8E75B2?style=for-the-badge&logo=google-bard&logoColor=white)](https://deepmind.google/technologies/gemini/) |
+| **Frontend** | [![Next.js](https://img.shields.io/badge/Next.js-16.1-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/) [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/) [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/) |
+| **DB** | [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/) [![Redis](https://img.shields.io/badge/Redis-Cache-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/) |
+| **Infra** | [![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/) [![Nginx](https://img.shields.io/badge/Nginx-Proxy-009639?style=for-the-badge&logo=nginx&logoColor=white)](https://nginx.org/) [![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI/CD-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/features/actions) [![Cloudflare](https://img.shields.io/badge/Cloudflare-Tunnel-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://www.cloudflare.com/) |
+
+---
+
+## 🔗 Live Demo
+👉 **[서비스 바로가기 (https://quizai.co.kr)](https://quizai.co.kr)**
+
+---
+
+## � 프로젝트 소개
+
+**QuizAi**는 학습하고 싶은 **기술 블로그**나 **유튜브 영상**의 링크만 입력하면, **Google Gemini AI**가 내용을 정밀 분석하여 적중률 높은 퀴즈를 생성해주는 서비스입니다.
+
+단순한 요약을 넘어, 학습자가 내용을 제대로 이해했는지 검증할 수 있는 **문제 풀이 경험**을 제공하는 서비스입니다.
+
+### 🎯 핵심 가치
+- **시간 절약**: 긴 영상이나 글을 다 보지 않아도 핵심 내용을 퀴즈로 빠르게 파악.
+- **능동적 학습**: 눈으로만 보는 것이 아니라 직접 문제를 풀며 학습.
+- **접근성**: 별도의 회원가입 없이 URL 입력만으로 즉시 시작.
+
+---
+
+## 📸 서비스 프로세스
+
+### 1. 학습할 URL 입력
+- 원하는 기술 블로그 글이나 유튜브 영상의 링크를 입력합니다. 사용자 친화적이고 직관적인 입력 UI를 제공합니다.
+<p align="center">
+  <img width="800" alt="Image" src="https://github.com/user-attachments/assets/0fd6a527-1753-4d16-8e89-dbb4d57ecaba" />
+</p>
+
+### 2. 링크 분석 요청 및 옵션 설정
+- 문제 개수(3/5/10/20문제)를 선택하고 분석을 요청합니다.
+<p align="center">
+  <img width="800" alt="Image" src="https://github.com/user-attachments/assets/0fd6a527-1753-4d16-8e89-dbb4d57ecaba" />
+</p>
+
+### 3. AI 분석 및 퀴즈 생성
+Gemini AI가 콘텐츠를 분석하여 즉시 퀴즈를 생성합니다.
+<p align="center">
+  <img width="800" alt="Image" src="https://github.com/user-attachments/assets/0652be19-4c1d-4266-b91a-a8d7e47a34d1" />
+</p>
+
+### 4. 퀴즈 풀이
+- 생성된 문제를 풀며 학습 내용을 점검합니다. 헷갈리는 문제는 즉시 정답 확인이 가능합니다.
+<p align="center">
+  <img width="800" alt="Image" src="https://github.com/user-attachments/assets/ad431f99-5f50-49c6-b773-b820ba56cf16" />
+</p>
+
+### 5. 결과 확인 및 해설
+- 채점 결과와 함께 AI가 제공하는 상세한 해설을 통해 빈틈없는 학습을 마무리합니다.
+<p align="center">
+  <img width="45%" alt="Result 1" src="https://github.com/user-attachments/assets/b23bb08e-dd8a-4e09-bbd7-584b36c0ffae" />
+  <img width="45%" alt="Result 2" src="https://github.com/user-attachments/assets/197ef5a3-5f3e-4472-ae7b-74734acc4367" />
+</p>
+
+---
+
+## � 기술 스택 (Tech Stack)
+
+### **Frontend**
+| Name | Description |
+| :--- | :--- |
+| **Next.js 16** | App Router 기반의 서버 사이드 렌더링 및 최신 React 기능 활용 |
+| **React 19** | 컴포넌트 기반 UI 개발 |
+| **Tailwind CSS v4** | 유틸리티 퍼스트 CSS 프레임워크로 빠르고 일관된 스타일링 |
+
+### **Backend**
+| Name | Description |
+| :--- | :--- |
+| **Java 17 & Spring Boot 3.5** | 안정적이고 확장 가능한 백엔드 서버 구축 |
+| **Spring Data JPA & Redis** | MySQL 영속성 관리 및 Redis 캐싱을 통한 성능 최적화 |
+| **WebFlux (WebClient)** | Gemini API와의 비동기 논블로킹 통신 처리 |
+| **Jsoup & yt-dlp** | 웹 크롤링 및 유튜브 비디오 오디오 추출 및 텍스트 변환 전처리 |
+
+### **Infra & DevOps**
+| Name | Description |
+| :--- | :--- |
+| **Docker & Compose** | 컨테이너 기반의 격리된 실행 환경 구성 |
+| **Nginx** | 리버스 프록시 및 정적 파일 서빙 |
+| **Shell Scripting** | `deploy.sh`를 활용한 자동화된 Blue/Green 무중단 배포 |
+
+---
+
+## 🧩 시스템 아키텍처 (Architecture)
+
+<p align="center">
+  <img width="1200" src="https://github.com/user-attachments/assets/fa48c8bf-40e1-4a74-99cd-794fdca40e48" />
+</p>
+
+---
+
+## � 주요 기능 (Key Features)
+
+- **📝 멀티 모달 입력 지원**: 텍스트 기반의 **블로그 포스트**뿐만 아니라 **유튜브 영상** 링크까지 지원하여 다양한 형태의 학습 자료를 처리합니다.
+- **⚡ 비동기 이벤트 처리**: `WebFlux`와 `Redis`를 활용한 비동기 작업 처리로 퀴즈 생성 중에도 사용자에게 실시간 진행 상황(대기 상태 등)을 안정적으로 피드백합니다.
+- **🔄 무중단 배포**: 서비스 중단 없이 새로운 기능을 배포할 수 있는 **Blue/Green 배포 전략**이 쉘 스크립트로 구현되어 있습니다.
+
+---
+
+## 🚀 시작하기 (Getting Started)
+
+로컬 환경에서 프로젝트를 실행해보시려면 다음 단계를 따라주세요.
+
+```bash
+# 1. 저장소 클론
+git clone https://github.com/your-repo/quizai.git
+
+# 2. 프로젝트 이동
+cd quizai
+
+# 3. 환경 변수 설정
+# 프로젝트 루트에 .env 파일을 생성하고 아래 형식을 참고하여 작성하세요.
+# (GEMINI_API_KEY는 필수입니다)
+
+DATABASE_NAME=quizAi
+DATABASE_USERNAME=quizAi
+DATABASE_PASSWORD=your_password
+DATABASE_ROOT_PASSWORD=your_root_password
+
+GEMINI_API_KEY=your_api_key_here
+
+MYSQL_PORT=3306
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+GRAFANA_ADMIN_USER=admin
+GRAFANA_ADMIN_PASSWORD=admin
+
+# 4. 개발 모드 실행 (Helper Script)
+./dev.sh up
+```
+
+---
+
+## 📨 Contact
+- **Developer**: INSU
+- **Email**: cth7097@naver.com
+- **GitHub**: [github.com/CHOIIS829](https://github.com/CHOIIS829)
