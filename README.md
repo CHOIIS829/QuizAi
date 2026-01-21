@@ -1,6 +1,15 @@
 # 🧠 QuizAi - 나만의 AI 튜터
+
+<p align="center">
+  <img width="500" alt="Image" src="https://github.com/user-attachments/assets/77e50708-d749-497d-9c98-52125fed062b" />
+</p>
+
 > **URL 하나로 끝내는 맞춤형 학습.**  
 > 기술 블로그, 유튜브 영상을 분석하여 핵심 퀴즈를 자동으로 생성해주는 AI 기반 학습 플랫폼입니다.
+
+<br>
+
+## 🛠 기술 스택
 
 | Category | Tech Stack |
 | :--- | :--- |
@@ -10,12 +19,14 @@
 | **DB** | [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/) [![Redis](https://img.shields.io/badge/Redis-Cache-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/) |
 | **Infra** | [![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/) [![Nginx](https://img.shields.io/badge/Nginx-Proxy-009639?style=for-the-badge&logo=nginx&logoColor=white)](https://nginx.org/) [![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI/CD-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/features/actions) [![Cloudflare](https://img.shields.io/badge/Cloudflare-Tunnel-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://www.cloudflare.com/) |
 
----
+
+<br>
 
 ## 🔗 Live Demo
 👉 **[서비스 바로가기 (https://quizai.co.kr)](https://quizai.co.kr)**
 
----
+
+<br>
 
 ## � 프로젝트 소개
 
@@ -28,7 +39,7 @@
 - **능동적 학습**: 눈으로만 보는 것이 아니라 직접 문제를 풀며 학습.
 - **접근성**: 별도의 회원가입 없이 URL 입력만으로 즉시 시작.
 
----
+<br>
 
 ## 📸 서비스 프로세스
 
@@ -63,7 +74,7 @@ Gemini AI가 콘텐츠를 분석하여 즉시 퀴즈를 생성합니다.
   <img width="45%" alt="Result 2" src="https://github.com/user-attachments/assets/197ef5a3-5f3e-4472-ae7b-74734acc4367" />
 </p>
 
----
+<br>
 
 ## � 기술 스택 (Tech Stack)
 
@@ -89,7 +100,7 @@ Gemini AI가 콘텐츠를 분석하여 즉시 퀴즈를 생성합니다.
 | **Nginx** | 리버스 프록시 및 정적 파일 서빙 |
 | **Shell Scripting** | `deploy.sh`를 활용한 자동화된 Blue/Green 무중단 배포 |
 
----
+<br>
 
 ## 🧩 시스템 아키텍처 (Architecture)
 
@@ -97,7 +108,7 @@ Gemini AI가 콘텐츠를 분석하여 즉시 퀴즈를 생성합니다.
   <img width="1020" height="967" alt="Image" src="https://github.com/user-attachments/assets/e16f4b49-bdd4-4bed-9278-442089fc3067" />
 </p>
 
----
+<br>
 
 ## � 주요 기능 (Key Features)
 
@@ -105,7 +116,7 @@ Gemini AI가 콘텐츠를 분석하여 즉시 퀴즈를 생성합니다.
 - **⚡ 비동기 이벤트 처리**: `WebFlux`와 `Redis`를 활용한 비동기 작업 처리로 퀴즈 생성 중에도 사용자에게 실시간 진행 상황(대기 상태 등)을 안정적으로 피드백합니다.
 - **🔄 무중단 배포**: 서비스 중단 없이 새로운 기능을 배포할 수 있는 **Blue/Green 배포 전략**이 쉘 스크립트로 구현되어 있습니다.
 
----
+<br>
 
 ## 🚀 시작하기 (Getting Started)
 
@@ -136,11 +147,11 @@ REDIS_PORT=6379
 GRAFANA_ADMIN_USER=admin
 GRAFANA_ADMIN_PASSWORD=admin
 
-# 4. 개발 모드 실행 (Helper Script)
+# 4. 개발 모드 실행
 ./dev.sh up
 ```
 
----
+<br>
 
 ## 📨 Contact
 - **Developer**: INSU
