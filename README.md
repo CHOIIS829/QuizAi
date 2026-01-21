@@ -1,7 +1,7 @@
 # 🧠 QuizAi - 나만의 AI 튜터
 
 <p align="center">
-  <img width="500" alt="Image" src="https://github.com/user-attachments/assets/77e50708-d749-497d-9c98-52125fed062b" />
+  <img width="300" alt="Image" src="https://github.com/user-attachments/assets/77e50708-d749-497d-9c98-52125fed062b" />
 </p>
 
 > **URL 하나로 끝내는 맞춤형 학습.**  
@@ -30,7 +30,7 @@
 
 ## � 프로젝트 소개
 
-**QuizAi**는 학습하고 싶은 **기술 블로그**나 **유튜브 영상**의 링크만 입력하면, **Google Gemini AI**가 내용을 정밀 분석하여 적중률 높은 퀴즈를 생성해주는 서비스입니다.
+**QuizAi**는 학습하고 싶은 **기술 블로그**나 **유튜브 영상**의 링크만 입력하면, **Google Gemini AI**가 내용을 정밀 분석하여 퀴즈를 생성해주는 서비스입니다.
 
 단순한 요약을 넘어, 학습자가 내용을 제대로 이해했는지 검증할 수 있는 **문제 풀이 경험**을 제공하는 서비스입니다.
 
@@ -43,32 +43,26 @@
 
 ## 📸 서비스 프로세스
 
-### 1. 학습할 URL 입력
-- 원하는 기술 블로그 글이나 유튜브 영상의 링크를 입력합니다. 사용자 친화적이고 직관적인 입력 UI를 제공합니다.
+### 1. 퀴즈 요청
+- URL과 문제 개수를 입력하여 퀴즈를 요청합니다.
 <p align="center">
-  <img width="800" alt="Image" src="https://github.com/user-attachments/assets/0fd6a527-1753-4d16-8e89-dbb4d57ecaba" />
+  <img width="600" alt="Image" src="https://github.com/user-attachments/assets/0fd6a527-1753-4d16-8e89-dbb4d57ecaba" />
 </p>
 
-### 2. 링크 분석 요청 및 옵션 설정
-- 문제 개수(3/5/10/20문제)를 선택하고 분석을 요청합니다.
-<p align="center">
-  <img width="800" alt="Image" src="https://github.com/user-attachments/assets/0fd6a527-1753-4d16-8e89-dbb4d57ecaba" />
-</p>
-
-### 3. AI 분석 및 퀴즈 생성
+### 2. AI 분석 및 퀴즈 생성
 Gemini AI가 콘텐츠를 분석하여 즉시 퀴즈를 생성합니다.
 <p align="center">
-  <img width="800" alt="Image" src="https://github.com/user-attachments/assets/0652be19-4c1d-4266-b91a-a8d7e47a34d1" />
+  <img width="600" alt="Image" src="https://github.com/user-attachments/assets/0652be19-4c1d-4266-b91a-a8d7e47a34d1" />
 </p>
 
-### 4. 퀴즈 풀이
-- 생성된 문제를 풀며 학습 내용을 점검합니다.
+### 3. 퀴즈 풀이
+- 생성된 문제는 4지선다 형식으로 제공되며, 앞 문제를 풀어야 다음 문제로 넘어갈 수 있습니다.
 <p align="center">
-  <img width="800" alt="Image" src="https://github.com/user-attachments/assets/ad431f99-5f50-49c6-b773-b820ba56cf16" />
+  <img width="600" alt="Image" src="https://github.com/user-attachments/assets/ad431f99-5f50-49c6-b773-b820ba56cf16" />
 </p>
 
-### 5. 결과 확인 및 해설
-- 채점 결과와 함께 AI가 제공하는 상세한 해설을 통해 빈틈없는 학습을 마무리합니다.
+### 4. 결과 확인 및 해설
+- 퀴즈를 모두 풀면 정답과 함께 해당 문제에 대한 해설을 확인할 수 있습니다.
 <p align="center">
   <img width="45%" alt="Result 1" src="https://github.com/user-attachments/assets/b23bb08e-dd8a-4e09-bbd7-584b36c0ffae" />
   <img width="45%" alt="Result 2" src="https://github.com/user-attachments/assets/197ef5a3-5f3e-4472-ae7b-74734acc4367" />
@@ -105,7 +99,7 @@ Gemini AI가 콘텐츠를 분석하여 즉시 퀴즈를 생성합니다.
 ## 🧩 시스템 아키텍처 (Architecture)
 
 <p align="center">
-  <img width="1020" height="967" alt="Image" src="https://github.com/user-attachments/assets/e16f4b49-bdd4-4bed-9278-442089fc3067" />
+  <img width="800" height="758" alt="Image" src="https://github.com/user-attachments/assets/e16f4b49-bdd4-4bed-9278-442089fc3067" />
 </p>
 
 <br>
@@ -150,6 +144,11 @@ GRAFANA_ADMIN_PASSWORD=admin
 # 4. 개발 모드 실행
 ./dev.sh up
 ```
+
+<br>
+
+## 📝 회고
+프로젝트 개발 과정에서의 기술적 고민과 해결 과정은 [RETROSPECTIVE.md](./RETROSPECTIVE.md)에서 확인하실 수 있습니다.
 
 <br>
 
