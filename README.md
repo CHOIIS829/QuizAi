@@ -1,7 +1,7 @@
 # 🧠 QuizAi - 나만의 AI 튜터
 
 <p align="center">
-  <img width="300" alt="Image" src="https://github.com/user-attachments/assets/77e50708-d749-497d-9c98-52125fed062b" />
+  <img width="500" alt="Image" src="https://github.com/user-attachments/assets/45b9efcd-1e40-4673-ae9a-54daf4fac81f" />
 </p>
 
 > **URL 하나로 끝내는 맞춤형 학습.**  
