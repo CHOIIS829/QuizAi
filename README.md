@@ -70,7 +70,7 @@ Gemini AI가 콘텐츠를 분석하여 즉시 퀴즈를 생성합니다.
 
 <br>
 
-## � 기술 스택 (Tech Stack)
+## � 기술 스택
 
 ### **Frontend**
 | Name | Description |
@@ -96,7 +96,7 @@ Gemini AI가 콘텐츠를 분석하여 즉시 퀴즈를 생성합니다.
 
 <br>
 
-## 🧩 시스템 아키텍처 (Architecture)
+## 🧩 시스템 아키텍처
 
 <p align="center">
   <img width="800" height="758" alt="Image" src="https://github.com/user-attachments/assets/e16f4b49-bdd4-4bed-9278-442089fc3067" />
@@ -104,7 +104,7 @@ Gemini AI가 콘텐츠를 분석하여 즉시 퀴즈를 생성합니다.
 
 <br>
 
-## � 주요 기능 (Key Features)
+## � 주요 기능
 
 - **📝 멀티 모달 입력 지원**: 텍스트 기반의 **블로그 포스트**뿐만 아니라 **유튜브 영상** 링크까지 지원하여 다양한 형태의 학습 자료를 처리합니다.
 - **⚡ 비동기 이벤트 처리**: `WebFlux`와 `Redis`를 활용한 비동기 작업 처리로 퀴즈 생성 중에도 사용자에게 실시간 진행 상황(대기 상태 등)을 안정적으로 피드백합니다.
@@ -112,7 +112,57 @@ Gemini AI가 콘텐츠를 분석하여 즉시 퀴즈를 생성합니다.
 
 <br>
 
-## 🚀 시작하기 (Getting Started)
+## 📊 퀴즈 생성 플로우차트
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Server as Quiz Server
+    participant Redis
+    participant Gemini as Gemini API
+    
+    %% 1. 요청 및 초기 응답
+    Client->>Server: 1. 퀴즈 생성 요청 (URL)
+    Server->>Redis: 2. Job 생성 (상태: PROCESSING)
+    Server-->>Client: 3. Job ID 반환 (Non-Blocking)
+    
+    %% 4. 백그라운드 비동기 작업 시작
+    par Async Processing & Polling
+        rect rgb(240, 248, 255)
+            Note over Server, Gemini: 백그라운드 작업 시작
+            alt is Youtube
+                Server->>Server: yt-dlp 영상 다운로드 (worst quality)
+                Server->>Gemini: 영상 파일 업로드
+            else is Blog
+                Server->>Server: Jsoup 텍스트 크롤링
+            end
+            
+            loop Processing Wait (Non-Blocking Polling)
+               Server->>Gemini: 파일 처리 상태 확인
+               Gemini-->>Server: State: PROCESSING / ACTIVE
+            end
+            
+            Server->>Gemini: 5. 퀴즈 생성 요청 (Prompt + Content)
+            Gemini-->>Server: 6. JSON 응답 생성
+            Server->>Redis: 7. 결과 저장 및 상태 업데이트 (COMPLETED)
+        end
+        
+        rect rgb(255, 250, 240)
+            Note over Client, Redis: 클라이언트 폴링
+            loop Every 2 Seconds
+                Client->>Server: 작업 상태 확인 (Job ID)
+                Server->>Redis: 상태 조회
+                Redis-->>Client: PROCESSING / COMPLETED
+            end
+        end
+    end
+    
+    %% 8. 최종 결과 반환
+    Client->>Client: 8. 완료 확인 및 결과 렌더링
+```
+
+
+## 🚀 시작하기
 
 로컬 환경에서 프로젝트를 실행해보시려면 다음 단계를 따라주세요.
 
@@ -156,3 +206,6 @@ GRAFANA_ADMIN_PASSWORD=admin
 - **Developer**: INSU
 - **Email**: cth7097@naver.com
 - **GitHub**: [github.com/CHOIIS829](https://github.com/CHOIIS829)
+
+
+
