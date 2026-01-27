@@ -3,6 +3,7 @@ package com.ondongne.backend.domain.quiz.service;
 import com.ondongne.backend.domain.gemini.service.GeminiService;
 import com.ondongne.backend.domain.quiz.dto.QuizResponseDto;
 import com.ondongne.backend.domain.quiz.repository.JobRedisRepository;
+import com.ondongne.backend.global.exception.FailCrawlException;
 import com.ondongne.backend.global.exception.FailDownloadException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
