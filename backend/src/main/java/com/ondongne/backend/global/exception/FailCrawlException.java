@@ -9,6 +9,10 @@ public class FailCrawlException extends BaseException {
         super(MESSAGE, ERROR_CODE);
     }
 
+    public FailCrawlException(Throwable cause) {
+        super(MESSAGE, ERROR_CODE, cause);
+    }
+
     @Override
     public int getStatusCode() {
         return 500;

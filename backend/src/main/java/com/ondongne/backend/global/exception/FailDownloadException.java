@@ -9,6 +9,10 @@ public class FailDownloadException extends BaseException {
         super(MESSAGE, ERROR_CODE);
     }
 
+    public FailDownloadException(Throwable cause) {
+        super(MESSAGE, ERROR_CODE, cause);
+    }
+
     @Override
     public int getStatusCode() {
         return 500;

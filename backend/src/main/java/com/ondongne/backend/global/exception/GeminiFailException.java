@@ -9,6 +9,10 @@ public class GeminiFailException extends BaseException {
         super(MESSAGE, ERROR_CODE);
     }
 
+    public GeminiFailException(Throwable cause) {
+        super(MESSAGE, ERROR_CODE, cause);
+    }
+
     @Override
     public int getStatusCode() {
         return 500;

@@ -3,7 +3,6 @@ package com.ondongne.backend.domain.quiz.service;
 import com.ondongne.backend.domain.gemini.service.GeminiService;
 import com.ondongne.backend.domain.quiz.dto.QuizResponseDto;
 import com.ondongne.backend.domain.quiz.repository.JobRedisRepository;
-import com.ondongne.backend.global.exception.FailCrawlException;
 import com.ondongne.backend.global.exception.FailDownloadException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -122,7 +121,8 @@ public class QuizService {
                         "article", "main",
                         ".tt_article_useless_p_margin", // 티스토리 본문
                         ".post-content", ".entry-content",
-                        ".markdown-body", "div[role='main']", "#content", ".content"
+                        ".markdown-body", "div[role='main']", "#content", ".content",
+                        ".atom-one" // Velog 본문
                 };
 
                 for (String selector : selectors) {
@@ -135,20 +135,20 @@ public class QuizService {
 
                 if (content == null) {
                     log.warn(">>>>> 명시적인 본문 영역을 찾지 못했습니다.");
-                    throw new RuntimeException("본문 영역을 찾지 못했습니다.");
+                    throw new FailCrawlException();
                 }
 
                 String text = content.text().trim();
 
                 if (text.isEmpty()) {
-                    throw new RuntimeException("본문 내용이 비어 있습니다.");
+                    throw new FailCrawlException();
                 }
 
                 return text;
 
             } catch (Exception e) {
                 log.error(">>>>> 비동기 크롤링 중 오류 발생: {}", e.getMessage());
-                throw new RuntimeException(">>>>> 크롤링 중 오류 발생: " + e.getMessage());
+                throw new FailCrawlException(e);
             }
         });
     }
@@ -193,7 +193,7 @@ public class QuizService {
 
             } catch (Exception e) {
                 log.error(">>>>> 다운로드 중 오류 발생", e);
-                throw new FailDownloadException();
+                throw new FailDownloadException(e);
             }
         });
     }

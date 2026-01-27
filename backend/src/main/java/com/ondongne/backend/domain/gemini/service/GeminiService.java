@@ -179,7 +179,7 @@ private Mono<QuizResultDto> callGeminiApi(String userPrompt, GeminiRequestDto.Pa
                         return Mono.just(objectMapper.readValue(jsonText, QuizResultDto.class));
                     } catch (Exception e) {
                         log.error(">>>>> Gemini 응답 파싱 오류: {}", e.getMessage());
-                        return Mono.error(new GeminiFailException());
+                        return Mono.error(new GeminiFailException(e));
                     }
                 })
                 .doOnError(e -> log.error(">>>>> Gemini API 호출: {}", e.getMessage()));
