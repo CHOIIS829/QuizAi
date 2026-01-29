@@ -1,0 +1,43 @@
+package com.quizAi.backend.domain.quiz.controller;
+
+import com.quizAi.backend.domain.quiz.dto.QuizRequestDto;
+import com.quizAi.backend.domain.quiz.dto.QuizResponseDto;
+import com.quizAi.backend.domain.quiz.service.QuizService;
+import com.quizAi.backend.global.response.SuccessResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@Slf4j
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/quiz")
+public class QuizController {
+
+    private final QuizService quizService;
+
+    @PostMapping("/generate")
+    public ResponseEntity<SuccessResponse<QuizResponseDto>> generateQuiz(@RequestBody QuizRequestDto quizRequestDto) {
+
+        QuizResponseDto quizResponseDto = quizService.processQuiz(quizRequestDto.getUrl(), quizRequestDto.getQuizCount());
+
+        return ResponseEntity.ok(SuccessResponse.<QuizResponseDto>builder()
+                .code(200)
+                .message("Success")
+                .data(quizResponseDto)
+                .build());
+    }
+
+    @GetMapping("/status/{jobId}")
+    public ResponseEntity<SuccessResponse<QuizResponseDto>> getQuizStatus(@PathVariable String jobId) {
+
+        QuizResponseDto quizResponseDto = quizService.getQuizStatus(jobId);
+
+        return ResponseEntity.ok(SuccessResponse.<QuizResponseDto>builder()
+                .code(200)
+                .message("Success")
+                .data(quizResponseDto)
+                .build());
+    }
+}
