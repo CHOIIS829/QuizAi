@@ -76,16 +76,16 @@ public class QuizService {
         } else {
             log.info(">>>>> 감지된 콘텐츠 타입 : YOUTUBE VIDEO");
 
-            downloadVideoAsync(url)
+            downloadAudioAsync(url) // [변경] Video -> Audio
                     .subscribeOn(Schedulers.boundedElastic())
                     .subscribe(
                             filePath -> {
-                                log.info(">>>>> [Job: {}] 다운로드 성공 (경로: {}). 퀴즈 생성 시작...", jobId, filePath);
-                                geminiService.generateQuizFromVideo(jobId, filePath, quizCount);
+                                log.info(">>>>> [Job: {}] 오디오 추출 성공 (경로: {}). 퀴즈 생성 시작...", jobId, filePath);
+                                geminiService.generateQuizFromAudio(jobId, filePath, quizCount); // [변경] Video -> Audio
                             },
                             error -> {
-                                log.error(">>>>> [Job: {}] 다운로드 실패: {}", jobId, error.getMessage());
-                                jobRedisRepository.update(jobId, QuizResponseDto.JobStatus.FAILED, "동영상 다운로드에 실패했습니다.", null);
+                                log.error(">>>>> [Job: {}] 오디오 추출 실패: {}", jobId, error.getMessage());
+                                jobRedisRepository.update(jobId, QuizResponseDto.JobStatus.FAILED, "오디오 추출에 실패했습니다.", null);
                             }
                     );
         }
@@ -155,21 +155,24 @@ public class QuizService {
     }
 
 
-    private Mono<String> downloadVideoAsync(String url) {
+    private Mono<String> downloadAudioAsync(String url) {
         return Mono.fromCallable(() -> {
             createTempDirectory();
 
-            String fileName = UUID.randomUUID().toString() + ".mp4"; // ex) uuid.mp4
-            String filePath = tempDir + File.separator + fileName; // ex) /temp/video/uuid.mp4
+            String fileName = UUID.randomUUID().toString() + ".m4a"; // [변경] mp4 -> m4a
+            String filePath = tempDir + File.separator + fileName;
 
-            log.info(">>>>> 다운로드 시작... 저장 경로: {}", filePath);
+            log.info(">>>>> 오디오 추출 시작... 저장 경로: {}", filePath);
 
             try {
                 ProcessBuilder builder = new ProcessBuilder(
                         ytDlpPath,
-                        "-f", "worst[ext=mp4]",
+                        "-f", "18/ba[ext=m4a]/ba",        // [변경] 403 방지를 위해 android 전용 18번 포맷 포함
+                        "--extract-audio",
+                        "--audio-format", "m4a",
+                        "--no-playlist",
                         "--force-ipv4",
-                        "--extractor-args", "youtube:player_client=android",
+                        "--extractor-args", "youtube:player_client=android", // [복구] 403 방지
                         "-o", filePath,
                         url
                 );

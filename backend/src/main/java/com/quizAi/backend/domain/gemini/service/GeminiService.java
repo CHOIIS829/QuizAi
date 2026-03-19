@@ -1,5 +1,6 @@
 package com.quizAi.backend.domain.gemini.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quizAi.backend.domain.gemini.dto.GeminiRequestDto;
 import com.quizAi.backend.domain.gemini.dto.GeminiResponseDto;
@@ -64,24 +65,22 @@ public class GeminiService {
                 );
     }
 
-    public void generateQuizFromVideo(String jobId, String filePath, int count) {
-        log.info(">>>>> Gemini Video Request Start. File: {}", filePath);
+    public void generateQuizFromAudio(String jobId, String filePath, int count) { // [변경] Video -> Audio
+        log.info(">>>>> Gemini Audio Request Start. File: {}", filePath);
 
-        uploadVideoAsync(filePath)
-                .doFinally(signalType -> deleteLocalFile(filePath)) // [추가] 업로드 종료(성공/실패) 후 즉시 파일 삭제
+        uploadAudioAsync(filePath) // [변경] uploadVideoAsync -> uploadAudioAsync
+                .doFinally(signalType -> deleteLocalFile(filePath))
                 .flatMap(fileUri -> {
                     log.info(">>>>> [Job: {}] 업로드 완료. URI: {}. 처리 대기 시작...", jobId, fileUri);
-                    // 2. 비동기 처리 대기 (Processing 상태 확인)
                     return waitForProcessingAsync(fileUri).thenReturn(fileUri);
                 })
                 .flatMap(fileUri -> {
                     log.info(">>>>> [Job: {}] 처리 완료 (ACTIVE). 퀴즈 생성 요청...", jobId);
 
-                    // 3. 퀴즈 생성 요청 (프롬프트 및 요청 객체 준비)
-                    String prompt = "업로드된 비디오의 시청각 정보를 심층 분석하여, 중요한 개념을 검증할 수 있는 고품질의 학습용 퀴즈를 만들어줘.";
+                    String prompt = "업로드된 오디오의 내용을 심층 분석하여, 중요한 개념을 검증할 수 있는 고품질의 학습용 퀴즈를 만들어줘.";
 
                     GeminiRequestDto.Part contentPart = GeminiRequestDto.Part.builder()
-                            .fileData(new GeminiRequestDto.FileData("video/mp4", fileUri))
+                            .fileData(new GeminiRequestDto.FileData("audio/mp4", fileUri)) // [변경] video/mp4 -> audio/mp4
                             .build();
 
                     // 이전에 리팩토링한 callGeminiApi 호출 (Mono 리턴)
@@ -124,7 +123,7 @@ private Mono<QuizResultDto> callGeminiApi(String userPrompt, GeminiRequestDto.Pa
         - 대신 그 자리를 '_____' (밑줄 5개)로 대체하여 빈칸 채우기 문제로 만들어.
         - 예시: 정답이 `filter`라면, 코드는 `.filter(...)`가 아니라 `._____(...)`로 작성해야 해.
         
-        [4. JSON 구조 예시]
+        [4. JSON 구조 예시] (★반드시 이 구조를 지킬 것. 대괄호[]로 시작하는 리스트 형식이 아닌 반드시 중괄호{}로 시작하는 객체 형식이어야 함)
         {
           "title": "주제 제목",
           "questions": [
@@ -175,7 +174,18 @@ private Mono<QuizResultDto> callGeminiApi(String userPrompt, GeminiRequestDto.Pa
                 .switchIfEmpty(Mono.error(new GeminiFailException()))
                 .flatMap(response -> {
                     try {
-                        String jsonText = response.getCandidates().get(0).getContent().getParts().get(0).getText();
+                        String jsonText = response.getCandidates().get(0).getContent().getParts().get(0).getText().trim();
+                        log.debug(">>>>> Gemini Raw Response: {}", jsonText);
+
+                        // [추가] 만약 Gemini가 배열 형식으로 응답했을 경우를 대비한 유연한 피싱
+                        if (jsonText.startsWith("[")) {
+                            List<QuizResultDto.QuestionDto> questions = objectMapper.readValue(jsonText, new TypeReference<List<QuizResultDto.QuestionDto>>() {});
+                            return Mono.just(QuizResultDto.builder()
+                                    .title("퀴즈 결과")
+                                    .questions(questions)
+                                    .build());
+                        }
+
                         return Mono.just(objectMapper.readValue(jsonText, QuizResultDto.class));
                     } catch (Exception e) {
                         log.error(">>>>> Gemini 응답 파싱 오류: {}", e.getMessage());
@@ -185,7 +195,7 @@ private Mono<QuizResultDto> callGeminiApi(String userPrompt, GeminiRequestDto.Pa
                 .doOnError(e -> log.error(">>>>> Gemini API 호출: {}", e.getMessage()));
     }
 
-    private Mono<String> uploadVideoAsync(String localFilePath) {
+    private Mono<String> uploadAudioAsync(String localFilePath) {
 
         return Mono.fromCallable(() -> {
             File file = new File(localFilePath);
@@ -197,7 +207,7 @@ private Mono<QuizResultDto> callGeminiApi(String userPrompt, GeminiRequestDto.Pa
         }).subscribeOn(Schedulers.boundedElastic()).flatMap(data -> {
             File file = (File) data.get("file");
             long numBytes = (Long) data.get("length");
-            String mimeType = "video/mp4";
+            String mimeType = "audio/mp4"; // [변경] video/mp4 -> audio/mp4
 
             // 메타데이터
             Map<String, Object> metadata = Map.of("file", Map.of("display_name", file.getName()));
