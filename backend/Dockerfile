@@ -13,19 +13,24 @@ RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     ffmpeg \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# 3. yt-dlp 설치
-RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
-RUN chmod a+rx /usr/local/bin/yt-dlp
+# 3. yt-dlp 설치 (PyPI에서 최신 버전 정보를 확인하여 캐시 무효화)
+ADD https://pypi.org/pypi/yt-dlp/json /tmp/yt-dlp-version.json
+RUN python3 -m pip install -U yt-dlp && rm /tmp/yt-dlp-version.json
+
+# 3-1. Non-root 사용자 생성
+RUN groupadd -r appuser && useradd -r -g appuser appuser
 
 WORKDIR /app
 
 # 4. 빌드된 JAR 파일 복사
 COPY --from=builder /app/build/libs/*.jar app.jar
 
-# 5. 임시 파일 저장소 생성
-RUN mkdir -p temp
+# 5. 임시 파일 저장소 생성 및 권한 부여
+RUN mkdir -p temp && chown -R appuser:appuser /app
+
+# 6. 사용자 전환
+USER appuser
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

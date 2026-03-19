@@ -33,6 +33,7 @@ export default function Home() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-API-KEY": process.env.NEXT_PUBLIC_BACKEND_API_KEY || "quiz-ai-default-key",
         },
         body: JSON.stringify({
           url: url,
@@ -83,7 +84,11 @@ export default function Home() {
       await new Promise(resolve => setTimeout(resolve, 2000)); // 2초 대기
 
       try {
-        const response = await fetch(`${apiBaseUrl}/api/quiz/status/${jobId}`);
+        const response = await fetch(`${apiBaseUrl}/api/quiz/status/${jobId}`, {
+          headers: {
+            "X-API-KEY": process.env.NEXT_PUBLIC_BACKEND_API_KEY || "quiz-ai-default-key",
+          }
+        });
         if (!response.ok) {
           throw await createErrorFromResponse(response);
         }

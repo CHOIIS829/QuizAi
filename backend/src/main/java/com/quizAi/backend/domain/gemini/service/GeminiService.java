@@ -157,7 +157,7 @@ private Mono<QuizResultDto> callGeminiApi(String userPrompt, GeminiRequestDto.Pa
                 GEMINI_BASE_URL, modelName.trim(), apiKey.trim());
         URI uri = URI.create(urlString);
 
-        log.info(">>>>> Calling Gemini API URI: {}", uri);
+        log.info(">>>>> Calling Gemini API for path: /{} (Model: {})", contentPart.getFileData() != null ? "audio" : "text", modelName.trim());
 
         return webClientBuilder.build()
                 .post()

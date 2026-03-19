@@ -1,5 +1,4 @@
 spring:
-  # 1. Database Configuration
   datasource:
     # 한글 깨짐 방지(characterEncoding)와 SSL 경고 제거 옵션 추가
     url: jdbc:mysql://localhost:${MYSQL_PORT}/${DATABASE_NAME}?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
@@ -13,18 +12,24 @@ spring:
     show-sql: false
     open-in-view: false
 
-  # 2. Redis Configuration
   data:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
-
-  # 3. Logging Configuration (Production Optimized)
-  logging:
+      password: ${REDIS_PASSWORD}
+ㄲ
+  logging:ㄲ
     level:
       root: INFO
-      com.ondongne.backend: INFO  
+      com.ondongne.backend: INFO
       org.springframework.web: INFO
-      org.hibernate: WARN        
-      org.hibernate.SQL: INFO     
+      org.hibernate: WARN
+      org.hibernate.SQL: INFO
       com.zaxxer.hikari: WARN
+
+server:
+  error:
+    include-stacktrace: never
+    include-message: never
+
+

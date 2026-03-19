@@ -25,6 +25,9 @@ spring:
 
 # 5. Custom Application Properties
 app:
+  auth:
+    api-key: ${BACKEND_API_KEY:quiz-ai-default-key}
+
   gemini:
     api-key: ${GEMINI_API_KEY}
     model: gemini-flash-latest
