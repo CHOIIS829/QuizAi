@@ -11,14 +11,14 @@ if [ -z "$IS_GREEN" ];then
   CURRENT_PORT=8090
   TARGET_PORT=8091
   TARGET_SERVICE="backend-green"
-  TARGET_UPSTREAM="http://backend-green:8080;"
+  TARGET_UPSTREAM="http://quizAi-backend-green:8080"
   STOP_SERVICE="backend-blue"
 else
   echo "### Green => Blue ###"
   CURRENT_PORT=8091
   TARGET_PORT=8090
   TARGET_SERVICE="backend-blue"
-  TARGET_UPSTREAM="http://backend-blue:8080;"
+  TARGET_UPSTREAM="http://quizAi-backend-blue:8080"
   STOP_SERVICE="backend-green"
 fi
 
@@ -30,25 +30,18 @@ echo "1-1. Fix volume permissions for $TARGET_SERVICE..."
 docker exec -u root $TARGET_SERVICE chown -R appuser:appuser /app/temp/video
 
 echo "2. Health Check..."
-for i in {1..10}
+for i in {1..15}
 do
-  echo "Attempt $i..."
-  sleep 3
-  # 호스트에서 헬스 체크 요청 (호스트 포트 사용)
+  sleep 5
   RESPONSE=$(curl -s http://localhost:$TARGET_PORT/actuator/health)
-  UP_COUNT=$(echo $RESPONSE | grep 'UP' | wc -l)
-
-  if [ $UP_COUNT -ge 1 ]; then
+  if [[ "$RESPONSE" == *"UP"* ]]; then
       echo ">> Success!"
       break
-  else
-      echo ">> Retry... (Response: $RESPONSE)"
-      sleep 10
   fi
+  echo ">> Wait... (Attempt $i/15) - Response: $RESPONSE"
 
-  if [ $i -eq 10 ]; then
+  if [ $i -eq 15 ]; then
     echo ">> Fail... Stopping new service."
-    echo ">> [LOGS] Printing logs for $TARGET_SERVICE:"
     docker-compose logs --tail=100 $TARGET_SERVICE
     docker-compose stop $TARGET_SERVICE
     exit 1
@@ -60,9 +53,9 @@ echo "3. Check & Start Frontend..."
 docker-compose up -d --build frontend
 
 echo "4. Change Nginx Upstream..."
-# Nginx 컨테이너 내부의 service-url.inc 파일 내용 변경
-docker exec quizAi-frontend /bin/sh -c "echo 'set \$service_url $TARGET_UPSTREAM' > $DEFAULT_CONF"
-docker exec quizAi-frontend nginx -s reload
+# Nginx 컨테이너 내부의 service-url.inc 파일 내용 변경 (명시적으로 세미콜론 추가)
+docker exec quizAi-frontend /bin/sh -c "echo 'set \$service_url $TARGET_UPSTREAM;' > $DEFAULT_CONF"
+docker exec quizAi-frontend nginx -t && docker exec quizAi-frontend nginx -s reload
 
 echo "5. Stop old service ($STOP_SERVICE)..."
 docker-compose stop $STOP_SERVICE

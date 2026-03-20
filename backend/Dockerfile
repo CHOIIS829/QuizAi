@@ -1,9 +1,19 @@
 # Step 1: Build Stage
 FROM eclipse-temurin:17-jdk-jammy as builder
 WORKDIR /app
-COPY . .
+
+# Gradle 래퍼와 핵심 설정 파일들을 먼저 복사하여 종속성 캐싱
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle settings.gradle ./
+
+# Gradle 자체와 의존성들을 미리 다운로드 (소스 코드가 바뀌어도 이 단계는 캐싱됨)
 RUN chmod +x gradlew
-RUN ./gradlew clean build -x test
+RUN ./gradlew dependencies --no-daemon
+
+# 소스 코드 복사 후 빌드 (clean 제거하여 속도 향상)
+COPY src src
+RUN ./gradlew build -x test --no-daemon
 
 # Step 2: Runtime Stage
 FROM eclipse-temurin:17-jdk-jammy
