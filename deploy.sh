@@ -38,12 +38,14 @@ do
       echo ">> Success!"
       break
   else
-      echo ">> Retry..."
+      echo ">> Retry... (Response: $RESPONSE)"
       sleep 10
   fi
 
   if [ $i -eq 10 ]; then
     echo ">> Fail... Stopping new service."
+    echo ">> [LOGS] Printing logs for $TARGET_SERVICE:"
+    docker-compose logs --tail=100 $TARGET_SERVICE
     docker-compose stop $TARGET_SERVICE
     exit 1
   fi
