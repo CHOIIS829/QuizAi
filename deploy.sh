@@ -25,6 +25,10 @@ fi
 echo "1. Start new connection ($TARGET_SERVICE)..."
 docker-compose up -d --build $TARGET_SERVICE
 
+# 마운트된 볼륨의 권한을 appuser로 변경 (root 권한 필요)
+echo "1-1. Fix volume permissions for $TARGET_SERVICE..."
+docker exec -u root $TARGET_SERVICE chown -R appuser:appuser /app/temp/video
+
 echo "2. Health Check..."
 for i in {1..10}
 do

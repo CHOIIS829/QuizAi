@@ -28,7 +28,7 @@ WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar app.jar
 
 # 5. 임시 파일 저장소 생성 및 권한 부여
-RUN mkdir -p temp && chown -R appuser:appuser /app
+RUN mkdir -p temp/video && chown -R appuser:appuser /app
 
 # 6. 사용자 전환
 USER appuser
