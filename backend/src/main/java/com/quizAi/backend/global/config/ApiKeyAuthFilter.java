@@ -30,9 +30,10 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 헬스 체크 등 공개 경로는 통과 (필요 시 수정)
+        // 헬스 체크 등 공개 경로는 통과
         String path = request.getRequestURI();
-        if (path.startsWith("/actuator/health") || path.startsWith("/favicon.ico") || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
+        if (path.contains("/actuator/health") || path.startsWith("/favicon.ico") || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            log.trace(">>>>> [AUTH] Whitelist path allowed: {}", path);
             filterChain.doFilter(request, response);
             return;
         }
