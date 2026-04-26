@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import Header from "../components/Header";
 import InputSection from "../components/InputSection";
@@ -171,6 +172,12 @@ export default function Home() {
             onRetry={handleRetry}
           />
         )}
+
+        <div className="mx-auto mt-14 flex max-w-5xl justify-center border-t border-slate-200 pt-6">
+          <Link href="/privacy" className="text-sm font-semibold text-slate-500 transition hover:text-slate-900">
+            개인정보처리방침
+          </Link>
+        </div>
       </main>
     </div>
   );
