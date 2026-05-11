@@ -19,6 +19,15 @@ spring:
       port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
 
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            redirect-uri: "${OAUTH2_REDIRECT_BASE_URL:https://quizai.co.kr}/login/oauth2/code/{registrationId}"
+          kakao:
+            redirect-uri: "${OAUTH2_REDIRECT_BASE_URL:https://quizai.co.kr}/login/oauth2/code/{registrationId}"
+
   logging:
     level:
       root: INFO

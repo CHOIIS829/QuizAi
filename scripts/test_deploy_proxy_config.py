@@ -40,10 +40,27 @@ class DeployProxyConfigTest(unittest.TestCase):
         self.assertIn("proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;", nginx)
         self.assertNotIn("proxy_set_header X-Forwarded-Proto $scheme;", nginx)
 
+    def test_nginx_does_not_forward_internal_port(self):
+        nginx = read("frontend/nginx/default.conf")
+
+        self.assertIn("map $proxy_x_forwarded_proto $proxy_default_forwarded_port", nginx)
+        self.assertIn("proxy_set_header X-Forwarded-Port $proxy_x_forwarded_port;", nginx)
+        self.assertNotIn("proxy_set_header X-Forwarded-Port $server_port;", nginx)
+
     def test_prod_backend_uses_forward_headers(self):
         prod = read("backend/src/main/resources/application-prod.yml")
 
         self.assertIn("forward-headers-strategy: framework", prod)
+
+    def test_prod_oauth_redirect_uri_uses_public_origin(self):
+        prod = read("backend/src/main/resources/application-prod.yml")
+
+        redirect_uri = (
+            "${OAUTH2_REDIRECT_BASE_URL:https://quizai.co.kr}"
+            "/login/oauth2/code/{registrationId}"
+        )
+        self.assertIn(f"redirect-uri: \"{redirect_uri}\"", prod)
+        self.assertNotIn("quizai.co.kr:8080", prod)
 
 
 if __name__ == "__main__":
