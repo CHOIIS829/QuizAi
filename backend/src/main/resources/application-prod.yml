@@ -29,6 +29,7 @@ spring:
       com.zaxxer.hikari: WARN
 
 server:
+  forward-headers-strategy: framework
   error:
     include-stacktrace: never
     include-message: never
@@ -37,4 +38,3 @@ app:
   frontend-url: ${FRONTEND_URL:https://quizai.co.kr}
   auth:
     cookie-secure: ${AUTH_COOKIE_SECURE:true}
-
