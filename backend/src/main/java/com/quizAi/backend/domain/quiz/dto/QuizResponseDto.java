@@ -13,6 +13,7 @@ public class QuizResponseDto {
     private JobStatus status;
     private QuizResultDto result;
     private String message;
+    private Long persistedQuizId;
 
     public enum JobStatus {
         PROCESSING,

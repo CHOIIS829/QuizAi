@@ -20,7 +20,7 @@ export default function QuizSection({
     const progress = Math.round(((currentQuestionIndex + 1) / quizData.questions.length) * 100);
 
     return (
-        <div className="w-full max-w-2xl">
+        <div className="mx-auto w-full max-w-4xl">
             <div className="flex justify-end mb-4">
                 <button
                     onClick={onRetry}

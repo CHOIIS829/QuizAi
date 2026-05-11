@@ -4,9 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quizAi.backend.domain.gemini.dto.GeminiRequestDto;
 import com.quizAi.backend.domain.gemini.dto.GeminiResponseDto;
-import com.quizAi.backend.domain.quiz.dto.QuizResponseDto;
 import com.quizAi.backend.domain.quiz.dto.QuizResultDto;
-import com.quizAi.backend.domain.quiz.repository.JobRedisRepository;
+import com.quizAi.backend.domain.quiz.entity.TopicTagCatalog;
 import com.quizAi.backend.global.exception.GeminiFailException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +26,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -41,67 +41,50 @@ public class GeminiService {
 
     private final ObjectMapper objectMapper;
     private final WebClient.Builder webClientBuilder;
-    private final JobRedisRepository jobRedisRepository;
 
     private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
     private static final String UPLOAD_API_URL = "https://generativelanguage.googleapis.com/upload/v1beta";
 
-    public void generateQuizFromText(String jobId, String text, int count) {
+    public Mono<QuizResultDto> generateQuizFromText(String text, int count) {
         log.info(">>>>> Gemini Text Request Start. Length: {}", text.length());
 
         String prompt = "제공된 텍스트의 핵심 내용을 심층 분석하여, 중요한 개념을 검증할 수 있는 고품질의 학습용 퀴즈를 만들어줘.";
         GeminiRequestDto.Part contentPart = GeminiRequestDto.Part.builder().text(text).build();
 
-        callGeminiApi(prompt, contentPart, count)
-                .subscribe(
-                        result -> {
-                            log.info("Job {} 완료. Redis 저장 중...", jobId);
-                            jobRedisRepository.update(jobId, QuizResponseDto.JobStatus.COMPLETED, "퀴즈 생성이 완료되었습니다.", result);
-                        },
-                        error -> {
-                            log.error("Job {} 실패. 에러: {}", jobId, error.getMessage());
-                            jobRedisRepository.update(jobId, QuizResponseDto.JobStatus.FAILED, "퀴즈 생성에 실패했습니다.", null);
-                        }
-                );
+        return callGeminiApi(prompt, contentPart, count);
     }
 
-    public void generateQuizFromAudio(String jobId, String filePath, int count) { // [변경] Video -> Audio
+    public Mono<QuizResultDto> generateQuizFromAudio(String filePath, int count) {
         log.info(">>>>> Gemini Audio Request Start. File: {}", filePath);
 
-        uploadAudioAsync(filePath) // [변경] uploadVideoAsync -> uploadAudioAsync
+        return uploadAudioAsync(filePath)
                 .doFinally(signalType -> deleteLocalFile(filePath))
                 .flatMap(fileUri -> {
-                    log.info(">>>>> [Job: {}] 업로드 완료. URI: {}. 처리 대기 시작...", jobId, fileUri);
+                    log.info(">>>>> 업로드 완료. URI: {}. 처리 대기 시작...", fileUri);
                     return waitForProcessingAsync(fileUri).thenReturn(fileUri);
                 })
                 .flatMap(fileUri -> {
-                    log.info(">>>>> [Job: {}] 처리 완료 (ACTIVE). 퀴즈 생성 요청...", jobId);
+                    log.info(">>>>> 처리 완료 (ACTIVE). 퀴즈 생성 요청...");
 
                     String prompt = "업로드된 오디오의 내용을 심층 분석하여, 중요한 개념을 검증할 수 있는 고품질의 학습용 퀴즈를 만들어줘.";
 
                     GeminiRequestDto.Part contentPart = GeminiRequestDto.Part.builder()
-                            .fileData(new GeminiRequestDto.FileData("audio/mp4", fileUri)) // [변경] video/mp4 -> audio/mp4
+                            .fileData(new GeminiRequestDto.FileData("audio/mp4", fileUri))
                             .build();
 
-                    // 이전에 리팩토링한 callGeminiApi 호출 (Mono 리턴)
                     return callGeminiApi(prompt, contentPart, count);
-                })
-                .subscribe(
-                        // 성공 시 Redis 저장
-                        quizResult -> {
-                            log.info(">>>>> [Job: {}] 퀴즈 생성 성공! Redis 저장 중...", jobId);
-                            jobRedisRepository.update(jobId, QuizResponseDto.JobStatus.COMPLETED, "퀴즈 생성이 완료되었습니다.", quizResult);
-                        },
-                        // 실패 시 에러 저장
-                        error -> {
-                            log.error(">>>>> [Job: {}] 처리 중 실패: {}", jobId, error.getMessage(), error);
-                            jobRedisRepository.update(jobId, QuizResponseDto.JobStatus.FAILED, "퀴즈 생성에 실패했습니다.", null);
-                        }
-                );
+                });
     }
 
-private Mono<QuizResultDto> callGeminiApi(String userPrompt, GeminiRequestDto.Part contentPart, int count) {
-    String systemPrompt = String.format("""
+    public List<String> selectTopicTags(QuizResultDto quizResultDto) {
+        return classifyTopicTags(quizResultDto)
+                .onErrorReturn(TopicTagCatalog.inferTags(quizResultDto))
+                .blockOptional()
+                .orElseGet(() -> TopicTagCatalog.inferTags(quizResultDto));
+    }
+
+    private Mono<QuizResultDto> callGeminiApi(String userPrompt, GeminiRequestDto.Part contentPart, int count) {
+        String systemPrompt = String.format("""
         너는 IT 기술 학습을 돕는 숙련된 '모의고사 출제자'야.
         제공된 내용을 심층 분석하여 학습자가 내용을 완벽히 이해했는지 검증할 수 있는 수준 높은 객관식 문제 %d개를 출제해.
         
@@ -195,6 +178,77 @@ private Mono<QuizResultDto> callGeminiApi(String userPrompt, GeminiRequestDto.Pa
                 .doOnError(e -> log.error(">>>>> Gemini API 호출: {}", e.getMessage()));
     }
 
+    private Mono<List<String>> classifyTopicTags(QuizResultDto quizResultDto) {
+        String systemPrompt = """
+                너는 IT 퀴즈를 분류하는 태그 분류기야.
+                허용된 태그 후보 목록 안에서만 가장 적절한 태그 1~3개를 선택해.
+                오직 JSON 배열 문자열만 반환해. 예: ["backend","database"]
+                """;
+
+        String questions = quizResultDto.getQuestions().stream()
+                .map(question -> question.getQuestion() + " / " + question.getExplanation())
+                .collect(Collectors.joining("\n"));
+
+        String userPrompt = """
+                태그 후보: %s
+                제목: %s
+                문항:
+                %s
+                """.formatted(TopicTagCatalog.slugs(), quizResultDto.getTitle(), questions);
+
+        return callJsonPrompt(systemPrompt, userPrompt)
+                .flatMap(rawJson -> {
+                    try {
+                        List<String> tags = objectMapper.readValue(rawJson, new TypeReference<List<String>>() {});
+                        List<String> allowedTags = TopicTagCatalog.slugs();
+                        List<String> filteredTags = tags.stream()
+                                .filter(allowedTags::contains)
+                                .distinct()
+                                .limit(3)
+                                .toList();
+
+                        return Mono.just(filteredTags.isEmpty() ? TopicTagCatalog.inferTags(quizResultDto) : filteredTags);
+                    } catch (Exception e) {
+                        log.warn(">>>>> 태그 분류 응답 파싱 실패. 휴리스틱으로 대체합니다. {}", e.getMessage());
+                        return Mono.just(TopicTagCatalog.inferTags(quizResultDto));
+                    }
+                });
+    }
+
+    private Mono<String> callJsonPrompt(String systemPrompt, String userPrompt) {
+        GeminiRequestDto request = GeminiRequestDto.builder()
+                .systemInstruction(GeminiRequestDto.SystemInstruction.builder()
+                        .parts(Collections.singletonList(GeminiRequestDto.Part.builder().text(systemPrompt).build()))
+                        .build())
+                .contents(Collections.singletonList(GeminiRequestDto.Content.builder()
+                        .role("user")
+                        .parts(List.of(GeminiRequestDto.Part.builder().text(userPrompt).build()))
+                        .build()))
+                .generationConfig(GeminiRequestDto.GenerationConfig.builder()
+                        .responseMimeType("application/json")
+                        .temperature(0.2)
+                        .build())
+                .build();
+
+        String urlString = String.format("%s/%s:generateContent?key=%s",
+                GEMINI_BASE_URL, modelName.trim(), apiKey.trim());
+
+        return webClientBuilder.build()
+                .post()
+                .uri(URI.create(urlString))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, clientResponse ->
+                        clientResponse.bodyToMono(String.class)
+                                .flatMap(errorBody -> Mono.error(new GeminiFailException()))
+                )
+                .bodyToMono(GeminiResponseDto.class)
+                .filter(response -> response.getCandidates() != null && !response.getCandidates().isEmpty())
+                .switchIfEmpty(Mono.error(new GeminiFailException()))
+                .map(response -> response.getCandidates().get(0).getContent().getParts().get(0).getText().trim());
+    }
+
     private Mono<String> uploadAudioAsync(String localFilePath) {
 
         return Mono.fromCallable(() -> {
@@ -259,12 +313,12 @@ private Mono<QuizResultDto> callGeminiApi(String userPrompt, GeminiRequestDto.Pa
                         .bodyToMono(Map.class)
                         .flatMap(response -> {
                             String state = (String) response.get("state");
-                            log.debug(">>>>> Video State Check: {}", state);
+                            log.debug(">>>>> Audio State Check: {}", state);
 
                             if ("ACTIVE".equals(state)) {
                                 return Mono.empty(); // 성공! (반복 종료)
                             } else if ("FAILED".equals(state)) {
-                                return Mono.error(new RuntimeException("Gemini 비디오 처리 실패 (FAILED)"));
+                                return Mono.error(new RuntimeException("Gemini 오디오 처리 실패 (FAILED)"));
                             } else {
                                 // PROCESSING 상태면 에러를 던져서 retryWhen이 잡게 함
                                 return Mono.error(new ProcessingNotFinishedException());

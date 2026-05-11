@@ -9,7 +9,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     show-sql: false
     open-in-view: false
 
@@ -33,4 +33,8 @@ server:
     include-stacktrace: never
     include-message: never
 
+app:
+  frontend-url: ${FRONTEND_URL:https://quizai.co.kr}
+  auth:
+    cookie-secure: ${AUTH_COOKIE_SECURE:true}
 

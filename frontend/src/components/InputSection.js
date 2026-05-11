@@ -1,6 +1,6 @@
-import { BookOpen, Play, BrainCircuit, AlertCircle } from "lucide-react";
+import { BookOpen, Play, BrainCircuit, AlertCircle, Bookmark } from "lucide-react";
 
-export default function InputSection({ url, setUrl, quizCount, setQuizCount, isLoading, onGenerate }) {
+export default function InputSection({ url, setUrl, quizCount, setQuizCount, isLoading, onGenerate, user }) {
     return (
         <div className="w-full max-w-[580px]">
             <div className="text-center space-y-6 mb-12">
@@ -93,6 +93,18 @@ export default function InputSection({ url, setUrl, quizCount, setQuizCount, isL
                         Powered by Google Gemini
                     </p>
                 </div>
+
+                {user && (
+                    <div className="mt-6 flex gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-left">
+                        <Bookmark className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                        <div className="text-sm leading-relaxed text-emerald-900">
+                            <p className="font-bold">로그인 상태</p>
+                            <p className="text-emerald-700">
+                                지금 생성하는 퀴즈는 완료와 동시에 내 마이페이지와 공개 게시판에 저장됩니다.
+                            </p>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

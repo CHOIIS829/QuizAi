@@ -8,15 +8,23 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  async rewrites() {
-    if (isProd) return [];
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:8080/api/:path*',
-      },
-    ];
-  },
 };
+
+if (!isProd) {
+  nextConfig.rewrites = async () => ([
+    {
+      source: '/api/:path*',
+      destination: 'http://localhost:8080/api/:path*',
+    },
+    {
+      source: '/oauth2/:path*',
+      destination: 'http://localhost:8080/oauth2/:path*',
+    },
+    {
+      source: '/login/oauth2/:path*',
+      destination: 'http://localhost:8080/login/oauth2/:path*',
+    },
+  ]);
+}
 
 export default nextConfig;

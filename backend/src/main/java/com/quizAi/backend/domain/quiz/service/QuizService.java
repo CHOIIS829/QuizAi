@@ -1,10 +1,15 @@
 package com.quizAi.backend.domain.quiz.service;
 
 import com.quizAi.backend.domain.gemini.service.GeminiService;
+import com.quizAi.backend.domain.quiz.dto.QuizJobRecord;
 import com.quizAi.backend.domain.quiz.dto.QuizResponseDto;
+import com.quizAi.backend.domain.quiz.dto.QuizResultDto;
+import com.quizAi.backend.domain.quiz.entity.QuizCreatedVia;
+import com.quizAi.backend.domain.quiz.entity.SourceType;
 import com.quizAi.backend.domain.quiz.repository.JobRedisRepository;
 import com.quizAi.backend.global.exception.FailCrawlException;
 import com.quizAi.backend.global.exception.FailDownloadException;
+import com.quizAi.backend.global.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -19,7 +24,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Service
@@ -34,61 +38,69 @@ public class QuizService {
 
     private final GeminiService geminiService;
     private final JobRedisRepository jobRedisRepository;
+    private final PersistedQuizService persistedQuizService;
+    private final QuizGenerationRateLimiter quizGenerationRateLimiter;
+    private final SourceMetadataResolver sourceMetadataResolver;
 
-    private static final Pattern YOUTUBE_PATTERN = Pattern.compile(
-            "^(https?://)?(www\\.|m\\.)?(youtube\\.com|youtu\\.be)/(watch\\?v=|shorts/|embed/|v/)?([a-zA-Z0-9_-]{11}).*$"
-    );
-
-    public QuizResponseDto processQuiz(String url, int quizCount) {
+    public QuizResponseDto processQuiz(String url, int quizCount, Long ownerUserId, String clientIp) {
+        quizGenerationRateLimiter.validate(clientIp);
 
         String jobId = UUID.randomUUID().toString();
+        SourceMetadata sourceMetadata = sourceMetadataResolver.resolve(url);
 
-        QuizResponseDto jobStatus = QuizResponseDto.builder()
+        QuizJobRecord jobStatus = QuizJobRecord.builder()
                 .jobId(jobId)
                 .status(QuizResponseDto.JobStatus.PROCESSING)
                 .message("퀴즈 생성이 진행 중입니다.")
+                .ownerUserId(ownerUserId)
+                .persistResult(ownerUserId != null)
+                .sourceUrl(url)
+                .sourceType(sourceMetadata.sourceType())
+                .sourceHost(sourceMetadata.sourceHost())
                 .build();
 
-        jobRedisRepository.save(jobId, jobStatus);
+        jobRedisRepository.save(jobStatus);
 
-        startAsyncJob(jobId, url, quizCount);
+        startAsyncJob(jobStatus, quizCount);
 
-        return jobStatus;
+        return jobStatus.toResponseDto();
     }
 
-    private void startAsyncJob(String jobId, String url, int quizCount) {
-        if(!isYoutubeUrl(url)) {
-            log.info(">>>>> 감지된 콘텐츠 타입 : BLOG / WEB POST");
+    private void startAsyncJob(QuizJobRecord job, int quizCount) {
+        Mono<QuizResultDto> generationTask;
 
-            crawlBlogAsync(url)
-                    .subscribeOn(Schedulers.boundedElastic())
-                    .subscribe(
-                            text -> {
-                                log.info(">>>>> [Job: {}] 크롤링 성공 (길이 : {}). 퀴즈 생성 시작...", jobId, text.length());
-                                geminiService.generateQuizFromText(jobId, text, quizCount);
-                            },
-                            error -> {
-                                log.error(">>>>> [Job: {}] 크롤링 실패: {}", jobId, error.getMessage());
-                                jobRedisRepository.update(jobId, QuizResponseDto.JobStatus.FAILED, "크롤링에 실패했습니다.", null);
-                            }
-                    );
-
-        } else {
+        if (job.getSourceType() == SourceType.YOUTUBE) {
             log.info(">>>>> 감지된 콘텐츠 타입 : YOUTUBE VIDEO");
-
-            downloadAudioAsync(url) // [변경] Video -> Audio
+            generationTask = downloadAudioAsync(job.getSourceUrl())
                     .subscribeOn(Schedulers.boundedElastic())
-                    .subscribe(
-                            filePath -> {
-                                log.info(">>>>> [Job: {}] 오디오 추출 성공 (경로: {}). 퀴즈 생성 시작...", jobId, filePath);
-                                geminiService.generateQuizFromAudio(jobId, filePath, quizCount); // [변경] Video -> Audio
-                            },
-                            error -> {
-                                log.error(">>>>> [Job: {}] 오디오 추출 실패: {}", jobId, error.getMessage());
-                                jobRedisRepository.update(jobId, QuizResponseDto.JobStatus.FAILED, "오디오 추출에 실패했습니다.", null);
-                            }
-                    );
+                    .flatMap(filePath -> {
+                        log.info(">>>>> [Job: {}] 오디오 추출 성공 (경로: {}). 퀴즈 생성 시작...", job.getJobId(), filePath);
+                        return geminiService.generateQuizFromAudio(filePath, quizCount);
+                    });
+        } else {
+            log.info(">>>>> 감지된 콘텐츠 타입 : BLOG / WEB POST");
+            generationTask = crawlBlogAsync(job.getSourceUrl())
+                    .subscribeOn(Schedulers.boundedElastic())
+                    .flatMap(text -> {
+                        log.info(">>>>> [Job: {}] 크롤링 성공 (길이 : {}). 퀴즈 생성 시작...", job.getJobId(), text.length());
+                        return geminiService.generateQuizFromText(text, quizCount);
+                    });
         }
+
+        generationTask
+                .flatMap(result -> finalizeJob(job, result))
+                .subscribe(
+                        unused -> log.info(">>>>> [Job: {}] 최종 처리 완료", job.getJobId()),
+                        error -> {
+                            log.error(">>>>> [Job: {}] 처리 실패: {}", job.getJobId(), error.getMessage(), error);
+                            jobRedisRepository.update(job.getJobId(), record -> {
+                                record.setStatus(QuizResponseDto.JobStatus.FAILED);
+                                record.setMessage(resolveFailureMessage(job, error));
+                                record.setResult(null);
+                                record.setPersistedQuizId(null);
+                            });
+                        }
+                );
     }
 
     private Mono<String> crawlBlogAsync(String url) {
@@ -214,10 +226,45 @@ public class QuizService {
     }
 
     public QuizResponseDto getQuizStatus(String jobId) {
-        return jobRedisRepository.findById(jobId);
+        QuizResponseDto response = jobRedisRepository.findResponseById(jobId);
+        if (response == null) {
+            throw new ResourceNotFoundException("작업을 찾을 수 없습니다.", "JOB_NOT_FOUND");
+        }
+        return response;
     }
 
-    private boolean isYoutubeUrl(String url) {
-        return url != null && YOUTUBE_PATTERN.matcher(url).matches();
+    private Mono<Void> finalizeJob(QuizJobRecord job, QuizResultDto quizResultDto) {
+        return Mono.fromCallable(() -> {
+                    Long persistedQuizId = null;
+                    if (job.isPersistResult() && job.getOwnerUserId() != null) {
+                        persistedQuizId = persistedQuizService.persistQuiz(
+                                job.getOwnerUserId(),
+                                job.getSourceUrl(),
+                                quizResultDto,
+                                QuizCreatedVia.MEMBER_GENERATED
+                        );
+                    }
+
+                    Long finalPersistedQuizId = persistedQuizId;
+                    jobRedisRepository.update(job.getJobId(), record -> {
+                        record.setStatus(QuizResponseDto.JobStatus.COMPLETED);
+                        record.setMessage("퀴즈 생성이 완료되었습니다.");
+                        record.setResult(quizResultDto);
+                        record.setPersistedQuizId(finalPersistedQuizId);
+                    });
+                    return finalPersistedQuizId;
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .then();
+    }
+
+    private String resolveFailureMessage(QuizJobRecord job, Throwable error) {
+        if (error instanceof FailDownloadException) {
+            return "오디오 추출에 실패했습니다.";
+        }
+        if (error instanceof FailCrawlException) {
+            return "크롤링에 실패했습니다.";
+        }
+        return "퀴즈 생성에 실패했습니다.";
     }
 }

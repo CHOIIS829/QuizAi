@@ -1,5 +1,10 @@
-
-export default function ResultSection({ quizData, userAnswers, onRetry }) {
+export default function ResultSection({
+    quizData,
+    userAnswers,
+    onRetry,
+    showGuestSavePrompt = false,
+    onGuestSave = null
+}) {
     if (!quizData || !quizData.questions) return null;
 
     const correctCount = quizData.questions.filter(
@@ -17,6 +22,22 @@ export default function ResultSection({ quizData, userAnswers, onRetry }) {
             </div>
 
             <div className="space-y-8">
+                {showGuestSavePrompt && (
+                    <div className="rounded-[2rem] border border-blue-100 bg-blue-50 p-6 shadow-sm">
+                        <h3 className="text-xl font-bold text-slate-900">이 퀴즈를 영구 저장할까요?</h3>
+                        <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                            로그인하면 방금 만든 퀴즈를 마이페이지에 저장하고, 게시판에서도 다시 찾아 풀 수 있어요.
+                        </p>
+                        <button
+                            type="button"
+                            onClick={onGuestSave}
+                            className="mt-5 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700"
+                        >
+                            로그인하고 영구 소장하기
+                        </button>
+                    </div>
+                )}
+
                 {quizData.questions.map((q, idx) => {
                     const isCorrect = userAnswers[q.id] === q.answer;
                     return (
