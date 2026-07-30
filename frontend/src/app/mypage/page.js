@@ -60,7 +60,7 @@ export default function MyPage() {
           {!user && !isLoading ? (
             <div className="rounded-[2rem] border border-slate-200 bg-white p-10 text-center shadow-sm">
               <h2 className="text-2xl font-bold text-slate-900">로그인이 필요한 공간입니다</h2>
-              <p className="mt-3 text-slate-500">Google 또는 Kakao로 로그인하면 내 퀴즈 히스토리를 저장할 수 있어요.</p>
+              <p className="mt-3 text-slate-500">Google로 로그인하면 내 퀴즈 히스토리를 저장할 수 있어요.</p>
               <button
                 type="button"
                 onClick={() => setIsLoginModalOpen(true)}

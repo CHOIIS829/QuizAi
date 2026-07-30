@@ -35,7 +35,7 @@ export default function LoginModal({ open, onClose, onSelectProvider }) {
           </button>
           <button
             type="button"
-            onClick={() => onSelectProvider("kakao")}
+            onClick={() => window.alert("카카오 로그인은 추후 지원 예정입니다.")}
             className="flex w-full items-center justify-center gap-3 rounded-2xl border border-[#F7E14B] bg-[#FEE500] px-4 py-4 font-semibold text-[#191919] transition hover:brightness-95"
           >
             <MessageCircleMore className="h-5 w-5" />

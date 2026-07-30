@@ -1,0 +1,10 @@
+.gradle/
+build/
+out/
+bin/
+.idea/
+temp/
+*.iml
+*.log
+.DS_Store
+Dockerfile.dev

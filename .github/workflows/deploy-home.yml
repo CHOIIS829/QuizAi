@@ -1,26 +1,158 @@
-name: Deploy to Home Server
+name: Verify, Build and Deploy to Home Server
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: quizai-home-production
+  cancel-in-progress: false
 
 jobs:
-  deploy:
-    runs-on: self-hosted
+  verify-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      backend-image: ${{ steps.image-names.outputs.backend }}
+      frontend-image: ${{ steps.image-names.outputs.frontend }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create .env file
-        run: |
-          if [ -n "${{ secrets.ENV_FILE_CONTENT }}" ]; then
-            echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
-          else
-            echo "Warning: ENV_FILE_CONTENT secret is not set."
-            touch .env
-          fi
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
 
-      - name: Run Deploy Script
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Verify Backend
+        working-directory: backend
+        run: ./gradlew test
+
+      - name: Verify Frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run audit:prod
+          npm run lint
+          npm run build
+
+      - name: Verify deployment configuration
+        run: |
+          python3 -m unittest scripts/test_deploy_proxy_config.py
+          bash -n deploy.sh scripts/db-backup.sh scripts/db-restore.sh
+
+      - name: Resolve immutable image names
+        id: image-names
+        shell: bash
+        run: |
+          image_prefix="ghcr.io/${GITHUB_REPOSITORY,,}"
+          echo "backend=${image_prefix}-backend:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "frontend=${image_prefix}-frontend:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Backend
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.image-names.outputs.backend }}
+          build-args: |
+            VCS_REF=${{ github.sha }}
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.image-names.outputs.frontend }}
+          build-args: |
+            VCS_REF=${{ github.sha }}
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+
+  deploy:
+    needs: verify-and-build
+    runs-on: self-hosted
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact release
+        uses: actions/checkout@v4
+        with:
+          clean: false
+
+      - name: Create pre-deployment database backup
+        id: database_backup
+        shell: bash
+        run: |
+          chmod +x scripts/db-backup.sh
+          BACKUP_RETENTION_DAYS=14 ./scripts/db-backup.sh
+
+      - name: Store pre-deployment backup outside the server
+        uses: actions/upload-artifact@v4
+        with:
+          name: quizai-mysql-pre-deploy-${{ github.run_id }}
+          path: ${{ steps.database_backup.outputs.backup_file }}
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Create production environment
+        shell: bash
+        run: |
+          if [ -z "${{ secrets.ENV_FILE_CONTENT }}" ]; then
+            echo "ENV_FILE_CONTENT secret is required." >&2
+            exit 1
+          fi
+          printf '%s\n' "${{ secrets.ENV_FILE_CONTENT }}" > .env
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy immutable images
+        shell: bash
+        env:
+          BACKEND_IMAGE: ${{ needs.verify-and-build.outputs.backend-image }}
+          FRONTEND_IMAGE: ${{ needs.verify-and-build.outputs.frontend-image }}
+          IMAGE_REVISION: ${{ github.sha }}
+          DEPLOY_PULL_IMAGES: "true"
         run: |
           chmod +x deploy.sh
+          docker compose config --quiet
           ./deploy.sh

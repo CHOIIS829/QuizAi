@@ -9,9 +9,18 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     open-in-view: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
+    validate-on-migrate: true
+
+  lifecycle:
+    timeout-per-shutdown-phase: 120s
 
   data:
     redis:
@@ -25,19 +34,21 @@ spring:
         registration:
           google:
             redirect-uri: "${OAUTH2_REDIRECT_BASE_URL:https://quizai.co.kr}/login/oauth2/code/{registrationId}"
-          kakao:
-            redirect-uri: "${OAUTH2_REDIRECT_BASE_URL:https://quizai.co.kr}/login/oauth2/code/{registrationId}"
+          # TODO: Kakao OAuth 지원 시 운영 redirect URI를 활성화합니다.
+          # kakao:
+          #   redirect-uri: "${OAUTH2_REDIRECT_BASE_URL:https://quizai.co.kr}/login/oauth2/code/{registrationId}"
 
   logging:
     level:
       root: INFO
-      com.ondongne.backend: INFO
+      com.quizAi.backend: INFO
       org.springframework.web: INFO
       org.hibernate: WARN
       org.hibernate.SQL: INFO
       com.zaxxer.hikari: WARN
 
 server:
+  shutdown: graceful
   forward-headers-strategy: framework
   error:
     include-stacktrace: never
@@ -46,4 +57,5 @@ server:
 app:
   frontend-url: ${FRONTEND_URL:https://quizai.co.kr}
   auth:
+    jwt-secret: ${JWT_SECRET_KEY}
     cookie-secure: ${AUTH_COOKIE_SECURE:true}

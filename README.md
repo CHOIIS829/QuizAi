@@ -91,8 +91,8 @@ Gemini AI가 콘텐츠를 분석하여 즉시 퀴즈를 생성합니다.
 | Name | Description |
 | :--- | :--- |
 | **Docker & Compose** | 컨테이너 기반의 격리된 실행 환경 구성 |
-| **Nginx** | 리버스 프록시 및 정적 파일 서빙 |
-| **Shell Scripting** | `deploy.sh`를 활용한 자동화된 Blue/Green 무중단 배포 |
+| **Nginx** | 고정 Gateway 리버스 프록시 및 정적 파일 라우팅 |
+| **Shell Scripting** | `deploy.sh`를 활용한 Frontend/Backend Blue/Green 무중단 배포 |
 
 <br>
 
@@ -108,7 +108,7 @@ Gemini AI가 콘텐츠를 분석하여 즉시 퀴즈를 생성합니다.
 
 - **📝 멀티 모달 입력 지원**: 텍스트 기반의 **블로그 포스트**뿐만 아니라 **유튜브 영상** 링크까지 지원하여 다양한 형태의 학습 자료를 처리합니다.
 - **⚡ 비동기 이벤트 처리**: `WebFlux`와 `Redis`를 활용한 비동기 작업 처리로 퀴즈 생성 중에도 사용자에게 실시간 진행 상황(대기 상태 등)을 안정적으로 피드백합니다.
-- **🔄 무중단 배포**: 서비스 중단 없이 새로운 기능을 배포할 수 있는 **Blue/Green 배포 전략**이 쉘 스크립트로 구현되어 있습니다.
+- **🔄 무중단 배포**: 고정 Gateway 뒤에서 Frontend와 Backend를 독립적으로 전환하고 실패 시 upstream을 자동 복원하는 **Blue/Green 배포 전략**이 구현되어 있습니다.
 
 <br>
 
@@ -188,9 +188,6 @@ MYSQL_PORT=3306
 REDIS_HOST=localhost
 REDIS_PORT=6379
 
-GRAFANA_ADMIN_USER=admin
-GRAFANA_ADMIN_PASSWORD=admin
-
 # 4. 개발 모드 실행
 ./dev.sh up
 ```
@@ -206,6 +203,5 @@ GRAFANA_ADMIN_PASSWORD=admin
 - **Developer**: INSU
 - **Email**: cth7097@naver.com
 - **GitHub**: [github.com/CHOIIS829](https://github.com/CHOIIS829)
-
 
 

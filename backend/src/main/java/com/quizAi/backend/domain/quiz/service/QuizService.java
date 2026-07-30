@@ -23,6 +23,7 @@ import reactor.core.scheduler.Schedulers;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.time.Instant;
 import java.util.UUID;
 
 @Slf4j
@@ -41,6 +42,7 @@ public class QuizService {
     private final PersistedQuizService persistedQuizService;
     private final QuizGenerationRateLimiter quizGenerationRateLimiter;
     private final SourceMetadataResolver sourceMetadataResolver;
+    private final QuizJobLifecycle quizJobLifecycle;
 
     public QuizResponseDto processQuiz(String url, int quizCount, Long ownerUserId, String clientIp) {
         quizGenerationRateLimiter.validate(clientIp);
@@ -57,6 +59,7 @@ public class QuizService {
                 .sourceUrl(url)
                 .sourceType(sourceMetadata.sourceType())
                 .sourceHost(sourceMetadata.sourceHost())
+                .createdAt(Instant.now())
                 .build();
 
         jobRedisRepository.save(jobStatus);
@@ -67,6 +70,14 @@ public class QuizService {
     }
 
     private void startAsyncJob(QuizJobRecord job, int quizCount) {
+        if (!quizJobLifecycle.tryStartJob()) {
+            jobRedisRepository.update(job.getJobId(), record -> {
+                record.setStatus(QuizResponseDto.JobStatus.FAILED);
+                record.setMessage("서버가 종료 중이어서 작업을 시작할 수 없습니다.");
+            });
+            return;
+        }
+
         Mono<QuizResultDto> generationTask;
 
         if (job.getSourceType() == SourceType.YOUTUBE) {
@@ -89,6 +100,7 @@ public class QuizService {
 
         generationTask
                 .flatMap(result -> finalizeJob(job, result))
+                .doFinally(signalType -> quizJobLifecycle.finishJob())
                 .subscribe(
                         unused -> log.info(">>>>> [Job: {}] 최종 처리 완료", job.getJobId()),
                         error -> {

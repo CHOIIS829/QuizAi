@@ -1,21 +1,129 @@
-name: Deploy to Production
+name: Verify, Build and Deploy Production Branch
 
 on:
   push:
-    branches: [ "production" ]
+    branches: ["production"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: quizai-remote-production
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  verify-and-build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      backend-image: ${{ steps.image-names.outputs.backend }}
+      frontend-image: ${{ steps.image-names.outputs.frontend }}
     steps:
-      - name: Deploy to Server
-        uses: appleboy/ssh-action@master
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Verify Backend
+        working-directory: backend
+        run: ./gradlew test
+
+      - name: Verify Frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run audit:prod
+          npm run lint
+          npm run build
+
+      - name: Verify deployment configuration
+        run: |
+          python3 -m unittest scripts/test_deploy_proxy_config.py
+          bash -n deploy.sh scripts/db-backup.sh scripts/db-restore.sh
+
+      - name: Resolve immutable image names
+        id: image-names
+        shell: bash
+        run: |
+          image_prefix="ghcr.io/${GITHUB_REPOSITORY,,}"
+          echo "backend=${image_prefix}-backend:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "frontend=${image_prefix}-frontend:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Backend
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.image-names.outputs.backend }}
+          build-args: |
+            VCS_REF=${{ github.sha }}
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+          cache-from: type=gha,scope=backend-production
+          cache-to: type=gha,mode=max,scope=backend-production
+
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.image-names.outputs.frontend }}
+          build-args: |
+            VCS_REF=${{ github.sha }}
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+          cache-from: type=gha,scope=frontend-production
+          cache-to: type=gha,mode=max,scope=frontend-production
+
+  deploy:
+    needs: verify-and-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Deploy immutable images to remote server
+        uses: appleboy/ssh-action@v1.2.2
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          BACKEND_IMAGE: ${{ needs.verify-and-build.outputs.backend-image }}
+          FRONTEND_IMAGE: ${{ needs.verify-and-build.outputs.frontend-image }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
+          envs: RELEASE_SHA,DEPLOY_PATH,BACKEND_IMAGE,FRONTEND_IMAGE,GHCR_USER,GHCR_TOKEN
           script: |
-            cd /path/to/project  # 실제 프로젝트 경로로 수정 필요
-            git pull origin main
+            set -eu
+            test -n "$DEPLOY_PATH"
+            cd "$DEPLOY_PATH"
+            git fetch origin production
+            git checkout --detach "$RELEASE_SHA"
+            printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             chmod +x deploy.sh
-            ./deploy.sh
+            DEPLOY_PULL_IMAGES=true \
+              BACKEND_IMAGE="$BACKEND_IMAGE" \
+              FRONTEND_IMAGE="$FRONTEND_IMAGE" \
+              IMAGE_REVISION="$RELEASE_SHA" \
+              ./deploy.sh

@@ -5,6 +5,7 @@
 Thumbs.db
 .env.prod
 .env.dev
+.env
 .idea/
 .vscode/
 *.swp
@@ -61,3 +62,7 @@ pnpm-debug.log*
 # ------------------------------------------------
 tmp/
 temp/
+__pycache__/
+*.py[cod]
+.deploy-state/
+/backups/

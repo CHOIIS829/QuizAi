@@ -3,6 +3,8 @@ package com.quizAi.backend.domain.quiz.dto;
 import com.quizAi.backend.domain.quiz.entity.SourceType;
 import lombok.*;
 
+import java.time.Instant;
+
 @Getter
 @Setter
 @Builder
@@ -20,6 +22,7 @@ public class QuizJobRecord {
     private String sourceUrl;
     private SourceType sourceType;
     private String sourceHost;
+    private Instant createdAt;
 
     public QuizResponseDto toResponseDto() {
         return QuizResponseDto.builder()

@@ -7,6 +7,9 @@ spring:
   profiles:
     default: local
 
+  flyway:
+    enabled: false
+
   security:
     oauth2:
       client:
@@ -17,23 +20,24 @@ spring:
             scope:
               - profile
               - email
-          kakao:
-            client-id: ${KAKAO_CLIENT_ID:test-kakao-client-id}
-            client-secret: ${KAKAO_CLIENT_SECRET:test-kakao-client-secret}
-            client-authentication-method: client_secret_post
-            authorization-grant-type: authorization_code
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-            client-name: Kakao
-            scope:
-              - profile_nickname
-              - profile_image
-              - account_email
-        provider:
-          kakao:
-            authorization-uri: https://kauth.kakao.com/oauth/authorize
-            token-uri: https://kauth.kakao.com/oauth/token
-            user-info-uri: https://kapi.kakao.com/v2/user/me
-            user-name-attribute: id
+          # TODO: Kakao OAuth 지원 시 registration/provider 설정을 함께 활성화합니다.
+          # kakao:
+          #   client-id: ${KAKAO_CLIENT_ID}
+          #   client-secret: ${KAKAO_CLIENT_SECRET}
+          #   client-authentication-method: client_secret_post
+          #   authorization-grant-type: authorization_code
+          #   redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+          #   client-name: Kakao
+          #   scope:
+          #     - profile_nickname
+          #     - profile_image
+          #     - account_email
+        # provider:
+        #   kakao:
+        #     authorization-uri: https://kauth.kakao.com/oauth/authorize
+        #     token-uri: https://kauth.kakao.com/oauth/token
+        #     user-info-uri: https://kapi.kakao.com/v2/user/me
+        #     user-name-attribute: id
 
   # 3. File Upload Limits
   servlet:
@@ -41,22 +45,22 @@ spring:
       max-file-size: 1GB
       max-request-size: 1GB
 
-# 4. Monitoring (Actuator & Prometheus)
+# 4. Actuator health check
 management:
   endpoints:
     web:
       exposure:
-        include: health, info, prometheus
+        include: health, info
   endpoint:
     health:
-      show-details: always
+      show-details: never
 
 # 5. Custom Application Properties
 app:
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
 
   auth:
-    jwt-secret: ${JWT_SECRET_KEY:quizai-default-jwt-secret-key-1234567890}
+    jwt-secret: ${JWT_SECRET_KEY:quizai-local-development-only-jwt-secret-key}
     access-token-seconds: ${ACCESS_TOKEN_SECONDS:1800}
     refresh-token-seconds: ${REFRESH_TOKEN_SECONDS:86400}
     access-cookie-name: ${ACCESS_COOKIE_NAME:quizai_access_token}
@@ -77,3 +81,7 @@ app:
     quiz-generate:
       limit: ${QUIZ_GENERATE_LIMIT:10}
       window-seconds: ${QUIZ_GENERATE_WINDOW_SECONDS:600}
+
+  jobs:
+    stale-after-minutes: ${QUIZ_JOB_STALE_AFTER_MINUTES:20}
+    recovery-interval-ms: ${QUIZ_JOB_RECOVERY_INTERVAL_MS:60000}

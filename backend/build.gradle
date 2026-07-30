@@ -34,6 +34,8 @@ dependencies {
     // 2. Database & Cache
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.flywaydb:flyway-core'
+    runtimeOnly 'org.flywaydb:flyway-mysql'
     runtimeOnly 'com.mysql:mysql-connector-j'
 
     // 3. Utilities & Tools (Lombok, Crawler)
@@ -49,13 +51,13 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
-    // 5. Monitoring (Actuator for Health Check)
-    implementation 'org.springframework.boot:spring-boot-starter-actuator' // 헬스 체크용
-//    implementation 'io.micrometer:micrometer-registry-prometheus'          // 프로메테우스는 제외
+    // 5. Actuator health check
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     // 7. Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'com.h2database:h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 

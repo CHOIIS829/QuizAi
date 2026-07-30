@@ -1,0 +1,1 @@
+set $frontend_url http://frontend-blue:8080;
