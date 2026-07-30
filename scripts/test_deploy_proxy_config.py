@@ -161,6 +161,20 @@ class DeployProxyConfigTest(unittest.TestCase):
             self.assertIn("docker/login-action@v4", workflow)
             self.assertNotIn("docker/login-action@v3", workflow)
 
+    def test_home_deploy_falls_back_to_standalone_compose(self):
+        workflow = read(".github/workflows/deploy-home.yml")
+        deploy = workflow[workflow.index("\n  deploy:") :]
+
+        plugin_check_index = deploy.index("docker compose version")
+        compose_config_index = deploy.index("docker compose config >/dev/null")
+        fallback_config_index = deploy.index("docker-compose config >/dev/null")
+        deploy_script_index = deploy.index("./deploy.sh")
+
+        self.assertLess(plugin_check_index, compose_config_index)
+        self.assertLess(compose_config_index, fallback_config_index)
+        self.assertLess(fallback_config_index, deploy_script_index)
+        self.assertNotIn("docker compose config --quiet", deploy)
+
     def test_backend_installs_ytdlp_with_supported_python(self):
         dockerfile = read("backend/Dockerfile")
 

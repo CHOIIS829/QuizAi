@@ -167,5 +167,9 @@ jobs:
           DEPLOY_PULL_IMAGES: "true"
         run: |
           chmod +x deploy.sh
-          docker compose config --quiet
+          if docker compose version >/dev/null 2>&1; then
+            docker compose config >/dev/null
+          else
+            docker-compose config >/dev/null
+          fi
           ./deploy.sh
