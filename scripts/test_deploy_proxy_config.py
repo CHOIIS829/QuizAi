@@ -127,6 +127,40 @@ class DeployProxyConfigTest(unittest.TestCase):
                 f"{workflow_path} must build both application images for amd64 and arm64",
             )
 
+    def test_home_deploy_uses_isolated_docker_credentials(self):
+        workflow = read(".github/workflows/deploy-home.yml")
+        deploy = workflow[workflow.index("\n  deploy:") :]
+
+        prepare_index = deploy.index("Prepare isolated Docker configuration")
+        login_index = deploy.index("Log in to GitHub Container Registry")
+
+        self.assertLess(prepare_index, login_index)
+        self.assertIn(
+            'docker_config_dir="$RUNNER_TEMP/quizai-docker-config"', deploy
+        )
+        self.assertIn(
+            "printf '%s\\n' '{\"auths\":{\"ghcr.io\":{}}}'"
+            ' > "$docker_config_dir/config.json"',
+            deploy,
+        )
+        self.assertIn('chmod 600 "$docker_config_dir/config.json"', deploy)
+        self.assertIn(
+            "printf 'DOCKER_CONFIG=%s\\n' \"$docker_config_dir\" >> \"$GITHUB_ENV\"",
+            deploy,
+        )
+        self.assertIn("packages: read", deploy)
+        self.assertNotIn("ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION", workflow)
+
+    def test_workflows_use_node24_docker_login_action(self):
+        for workflow_path in (
+            ".github/workflows/deploy-home.yml",
+            ".github/workflows/deploy-cloud.yml",
+        ):
+            workflow = read(workflow_path)
+
+            self.assertIn("docker/login-action@v4", workflow)
+            self.assertNotIn("docker/login-action@v3", workflow)
+
     def test_backend_installs_ytdlp_with_supported_python(self):
         dockerfile = read("backend/Dockerfile")
 

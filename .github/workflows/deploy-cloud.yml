@@ -58,7 +58,7 @@ jobs:
           echo "backend=${image_prefix}-backend:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
           echo "frontend=${image_prefix}-frontend:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
 
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
