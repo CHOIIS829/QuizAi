@@ -89,6 +89,38 @@ class DeployProxyConfigTest(unittest.TestCase):
         self.assertIn("shutdown: graceful", prod)
         self.assertIn("forward-headers-strategy: framework", prod)
 
+    def test_variable_quiz_text_columns_use_text_migration(self):
+        """길이가 유동적인 퀴즈 문자열 컬럼이 TEXT로 확장되는지 확인합니다."""
+        migration = read(
+            "backend/src/main/resources/db/migration/"
+            "V2__expand_quiz_text_columns.sql"
+        )
+        quiz = read(
+            "backend/src/main/java/com/quizAi/backend/domain/quiz/entity/Quiz.java"
+        )
+        question = read(
+            "backend/src/main/java/com/quizAi/backend/domain/quiz/entity/"
+            "QuizQuestion.java"
+        )
+
+        for column in ("source_url", "question", "explanation", "code_snippet"):
+            self.assertIn(f"MODIFY COLUMN {column} TEXT", migration)
+        self.assertNotIn("TINYTEXT", migration)
+        self.assertIn(
+            '@Column(name = "source_url", nullable = false, columnDefinition = "TEXT")',
+            quiz,
+        )
+        self.assertEqual(
+            2,
+            question.count(
+                '@Column(nullable = false, columnDefinition = "TEXT")'
+            ),
+        )
+        self.assertIn(
+            '@Column(name = "code_snippet", columnDefinition = "TEXT")',
+            question,
+        )
+
     def test_prod_jwt_is_required_and_kakao_is_not_required_by_compose(self):
         compose = read("docker-compose.yml")
         prod = read("backend/src/main/resources/application-prod.yml")

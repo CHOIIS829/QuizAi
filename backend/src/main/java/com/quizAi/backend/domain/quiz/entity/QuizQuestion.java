@@ -29,7 +29,7 @@ public class QuizQuestion {
     private int sortOrder;
 
     @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String question;
 
     @Convert(converter = StringListJsonConverter.class)
@@ -40,10 +40,10 @@ public class QuizQuestion {
     private String answer;
 
     @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String explanation;
 
     @Lob
-    @Column(name = "code_snippet")
+    @Column(name = "code_snippet", columnDefinition = "TEXT")
     private String codeSnippet;
 }

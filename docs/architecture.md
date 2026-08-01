@@ -82,6 +82,7 @@ com.quizAi.backend
 - 주제 태그
 
 운영 스키마는 Flyway migration으로 변경하고 Hibernate `validate`로 Entity와의 정합성을 확인합니다. 기존 운영 스키마는 Flyway version 1로 baseline 처리하며, 이후 변경은 `backend/src/main/resources/db/migration` 아래의 버전 SQL로 관리합니다.
+AI가 생성하는 문제, 해설, 코드 스니펫과 길이가 유동적인 원본 URL은 MySQL `TEXT`로 저장하여 255바이트 제한으로 인한 저장 실패를 방지합니다.
 
 ### Redis
 

@@ -36,7 +36,7 @@ public class Quiz {
     private String title;
 
     @Lob
-    @Column(name = "source_url", nullable = false)
+    @Column(name = "source_url", nullable = false, columnDefinition = "TEXT")
     private String sourceUrl;
 
     @Enumerated(EnumType.STRING)
