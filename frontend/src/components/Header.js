@@ -58,10 +58,12 @@ export default function Header() {
               <LayoutGrid className="h-4 w-4" />
               게시판
             </Link>
-            <Link href="/mypage" className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900">
-              <LibraryBig className="h-4 w-4" />
-              마이페이지
-            </Link>
+            {user && (
+              <Link href="/mypage" className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900">
+                <LibraryBig className="h-4 w-4" />
+                마이페이지
+              </Link>
+            )}
           </nav>
 
           <div className="hidden items-center gap-3 md:flex">
@@ -134,10 +136,12 @@ export default function Header() {
               <LayoutGrid className="h-5 w-5 text-blue-600" />
               게시판
             </Link>
-            <Link href="/mypage" onClick={closeMobileMenu} className="flex items-center gap-3 rounded-2xl px-4 py-4 text-base font-semibold text-slate-800 transition hover:bg-white">
-              <LibraryBig className="h-5 w-5 text-blue-600" />
-              마이페이지
-            </Link>
+            {user && (
+              <Link href="/mypage" onClick={closeMobileMenu} className="flex items-center gap-3 rounded-2xl px-4 py-4 text-base font-semibold text-slate-800 transition hover:bg-white">
+                <LibraryBig className="h-5 w-5 text-blue-600" />
+                마이페이지
+              </Link>
+            )}
           </nav>
 
           <div className="mt-auto border-t border-slate-200 pt-5">

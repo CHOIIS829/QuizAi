@@ -1,39 +1,24 @@
 "use client";
 
 import { SOURCE_TYPE_OPTIONS, TOPIC_TAG_OPTIONS } from "../lib/constants";
+import FilterSelect from "./FilterSelect";
 
 export default function FilterBar({ sourceType, tag, onChange }) {
+  // 소스 유형과 주제 태그 필터를 동일한 선택 UI로 제공한다.
+  // 소스 유형 변경 값을 기존 필터 객체 형태로 전달한다.
+  const handleSourceTypeChange = (nextSourceType) => {
+    onChange({ sourceType: nextSourceType, tag });
+  };
+
+  // 주제 태그 변경 값을 기존 필터 객체 형태로 전달한다.
+  const handleTagChange = (nextTag) => {
+    onChange({ sourceType, tag: nextTag });
+  };
+
   return (
     <div className="mb-8 grid gap-3 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-2">
-      <label className="flex flex-col gap-2 text-sm font-semibold text-slate-700">
-        소스 유형
-        <select
-          value={sourceType}
-          onChange={(event) => onChange({ sourceType: event.target.value, tag })}
-          className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-400"
-        >
-          {SOURCE_TYPE_OPTIONS.map((option) => (
-            <option key={option.value || "all"} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="flex flex-col gap-2 text-sm font-semibold text-slate-700">
-        주제 태그
-        <select
-          value={tag}
-          onChange={(event) => onChange({ sourceType, tag: event.target.value })}
-          className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-400"
-        >
-          {TOPIC_TAG_OPTIONS.map((option) => (
-            <option key={option.value || "all"} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <FilterSelect label="소스 유형" value={sourceType} options={SOURCE_TYPE_OPTIONS} onChange={handleSourceTypeChange} />
+      <FilterSelect label="주제 태그" value={tag} options={TOPIC_TAG_OPTIONS} onChange={handleTagChange} />
     </div>
   );
 }
