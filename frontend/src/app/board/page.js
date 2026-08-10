@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import FilterBar from "../../components/FilterBar";
 import QuizCard from "../../components/QuizCard";
-import { fetchJson } from "../../lib/api";
+import { fetchBoardQuizzes } from "../../lib/boardApi";
 
 export default function BoardPage() {
   const [filters, setFilters] = useState({ sourceType: "", tag: "" });
@@ -13,17 +13,17 @@ export default function BoardPage() {
 
   useEffect(() => {
     const loadBoard = async () => {
+      // 선택된 필터의 게시판 목록을 불러와 화면 상태에 반영한다.
       setIsLoading(true);
       setError("");
 
       try {
-        const searchParams = new URLSearchParams();
-        if (filters.sourceType) searchParams.set("sourceType", filters.sourceType);
-        if (filters.tag) searchParams.set("tag", filters.tag);
-        searchParams.set("page", "0");
-        searchParams.set("size", "12");
-
-        const response = await fetchJson(`/api/board/quizzes?${searchParams.toString()}`);
+        const response = await fetchBoardQuizzes({
+          sourceType: filters.sourceType,
+          tag: filters.tag,
+          page: 0,
+          size: 12,
+        });
         setQuizzes(response.data.content);
       } catch (fetchError) {
         setError(fetchError.message);

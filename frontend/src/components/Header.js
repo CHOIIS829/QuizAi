@@ -6,6 +6,7 @@ import { BrainCircuit, LayoutGrid, LibraryBig, LogIn, LogOut, Menu, PlusCircle, 
 import { useAuth } from "./AuthProvider";
 import LoginModal from "./LoginModal";
 import { startOAuthLogin } from "../lib/api";
+import { prefetchDefaultBoardQuizzes } from "../lib/boardApi";
 
 export default function Header() {
   const { user, logout } = useAuth();
@@ -35,6 +36,12 @@ export default function Header() {
     setIsLoginModalOpen(true);
   };
 
+  const handleMobileBoardClick = () => {
+    // 모바일 게시판 이동과 목록 요청을 동시에 시작하고 메뉴를 닫는다.
+    prefetchDefaultBoardQuizzes();
+    closeMobileMenu();
+  };
+
   return (
     <>
       <header className="fixed top-0 left-0 z-50 w-full border-b border-slate-200/70 bg-[#F8FAFC]/85 backdrop-blur">
@@ -54,7 +61,13 @@ export default function Header() {
               <PlusCircle className="h-4 w-4" />
               퀴즈 만들기
             </Link>
-            <Link href="/board" className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900">
+            <Link
+              href="/board"
+              onMouseEnter={prefetchDefaultBoardQuizzes}
+              onFocus={prefetchDefaultBoardQuizzes}
+              onClick={prefetchDefaultBoardQuizzes}
+              className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"
+            >
               <LayoutGrid className="h-4 w-4" />
               게시판
             </Link>
@@ -132,7 +145,13 @@ export default function Header() {
               <PlusCircle className="h-5 w-5 text-blue-600" />
               퀴즈 만들기
             </Link>
-            <Link href="/board" onClick={closeMobileMenu} className="flex items-center gap-3 rounded-2xl px-4 py-4 text-base font-semibold text-slate-800 transition hover:bg-white">
+            <Link
+              href="/board"
+              onPointerDown={prefetchDefaultBoardQuizzes}
+              onFocus={prefetchDefaultBoardQuizzes}
+              onClick={handleMobileBoardClick}
+              className="flex items-center gap-3 rounded-2xl px-4 py-4 text-base font-semibold text-slate-800 transition hover:bg-white"
+            >
               <LayoutGrid className="h-5 w-5 text-blue-600" />
               게시판
             </Link>
