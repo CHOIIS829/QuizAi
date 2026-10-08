@@ -8,6 +8,7 @@ import { useAuth } from "../../components/AuthProvider";
 import { fetchJson, startOAuthLogin } from "../../lib/api";
 
 export default function MyPage() {
+  // 인증된 사용자의 저장 퀴즈를 조회하고 비로그인 사용자에게 로그인 안내를 표시합니다.
   const { user, isLoading } = useAuth();
   const [filters, setFilters] = useState({ sourceType: "", tag: "" });
   const [quizzes, setQuizzes] = useState([]);
@@ -36,11 +37,7 @@ export default function MyPage() {
       }
     };
 
-    if (isLoading) return;
-    if (!user) {
-      setIsPageLoading(false);
-      return;
-    }
+    if (isLoading || !user) return;
 
     loadQuizzes();
   }, [user, isLoading, filters.sourceType, filters.tag]);

@@ -16,6 +16,7 @@ export default function PersistedQuizPage() {
 }
 
 function PersistedQuizContent() {
+  // 퀴즈를 조회하고 식별자가 없는 요청은 별도 상태 변경 없이 오류를 표시합니다.
   const searchParams = useSearchParams();
   const router = useRouter();
   const quizId = searchParams.get("id");
@@ -27,6 +28,7 @@ function PersistedQuizContent() {
   const [step, setStep] = useState("QUIZ");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const pageError = quizId ? error : "퀴즈 식별자가 없습니다.";
 
   useEffect(() => {
     const loadQuiz = async () => {
@@ -48,8 +50,6 @@ function PersistedQuizContent() {
     };
 
     if (!quizId) {
-      setError("퀴즈 식별자가 없습니다.");
-      setIsLoading(false);
       return;
     }
 
@@ -90,11 +90,11 @@ function PersistedQuizContent() {
   return (
     <main className="min-h-screen bg-[#F8FAFC] px-4 pb-24 pt-32">
       <div className="mx-auto max-w-5xl">
-        {isLoading ? (
+        {quizId && isLoading ? (
           <QuizPageFallback message="퀴즈를 불러오는 중..." />
-        ) : error ? (
+        ) : pageError ? (
           <div className="rounded-[2rem] bg-white p-10 text-center shadow-sm">
-            <p className="text-red-500">{error}</p>
+            <p className="text-red-500">{pageError}</p>
             <button
               type="button"
               onClick={() => router.push("/board")}

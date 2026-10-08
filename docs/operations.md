@@ -8,6 +8,14 @@
 - Cloudflare Tunnel이 같은 호스트에서 동작하는 기본 구성은 Gateway를 `127.0.0.1:90`에 바인딩합니다. 다른 호스트 또는 컨테이너에서 접근한다면 방화벽을 먼저 제한하고 `GATEWAY_BIND_ADDRESS`를 조정합니다.
 - 동시에 하나의 배포만 실행할 수 있으며 `.deploy-state/deploy.lock`이 배포 잠금 역할을 합니다.
 
+## 프론트엔드 의존성 검증
+
+- 배포 Actions는 `npm ci` 이후 `npm run audit:prod`, `npm run lint`, `npm run build`를 순서대로 실행합니다.
+- 운영 의존성에 높음 또는 치명적 수준의 취약점이 있으면 이미지 생성과 서버 배포를 시작하지 않습니다.
+- Next.js와 `eslint-config-next`는 같은 버전으로 갱신하고, 고정된 `sharp` 버전과 간접 의존성도 함께 확인합니다.
+- 패키지 갱신 시 `frontend/package.json`과 `frontend/package-lock.json`을 함께 커밋하고 전체 검증을 실행합니다.
+- lint 규칙 갱신으로 로딩 처리 오류가 발생하면 규칙을 끄지 않고 인증 콜백의 초기 상태, 비로그인 안내, 퀴즈 식별자 누락 처리를 함께 검증합니다.
+
 ## DB migration
 
 운영 Hibernate는 `ddl-auto: validate`이며 스키마를 자동 수정하지 않습니다. 모든 운영 변경은 Flyway SQL로 관리합니다.

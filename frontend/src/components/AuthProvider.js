@@ -7,25 +7,24 @@ import { fetchJson } from "../lib/api";
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+  // 인증 정보를 공유하고 로그인 콜백의 로딩 상태는 최초 렌더링에서 결정합니다.
   const pathname = usePathname();
   const initializedRef = useRef(false);
   const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(pathname !== "/auth/callback");
 
-  const refreshUser = async () => {
-    try {
-      const response = await fetchJson("/api/auth/me", {
-        headers: {},
+  const refreshUser = () => {
+    // 인증 조회가 끝난 뒤 사용자와 로딩 상태를 함께 갱신합니다.
+    return fetchJson("/api/auth/me", {
+      headers: {},
+    })
+      .then((response) => response?.data ?? null)
+      .catch(() => null)
+      .then((nextUser) => {
+        setUser(nextUser);
+        setIsLoading(false);
+        return nextUser;
       });
-      const nextUser = response?.data ?? null;
-      setUser(nextUser);
-      return nextUser;
-    } catch {
-      setUser(null);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const logout = async () => {
@@ -43,7 +42,6 @@ export function AuthProvider({ children }) {
     initializedRef.current = true;
 
     if (pathname === "/auth/callback") {
-      setIsLoading(false);
       return;
     }
 
