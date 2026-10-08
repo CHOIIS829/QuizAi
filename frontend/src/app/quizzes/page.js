@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import QuizSection from "../../components/QuizSection";
 import ResultSection from "../../components/ResultSection";
 import { fetchJson } from "../../lib/api";
+import { getQuizProgress, isValidQuestionIndex } from "../../lib/quiz-navigation";
 
 export default function PersistedQuizPage() {
   return (
@@ -62,12 +63,22 @@ function PersistedQuizContent() {
     }));
   };
 
+  const handleQuestionChange = (index) => {
+    // 답안을 유지하면서 유효한 번호의 문제로 이동합니다.
+    if (isValidQuestionIndex(index, quizData?.questions.length ?? 0)) {
+      setCurrentQuestionIndex(index);
+    }
+  };
+
   const handleNext = () => {
+    // 다음 문제로 이동하거나 모든 답변이 완료된 경우에만 결과를 표시합니다.
     if (currentQuestionIndex < quizData.questions.length - 1) {
-      setCurrentQuestionIndex((prev) => prev + 1);
+      handleQuestionChange(currentQuestionIndex + 1);
       return;
     }
-    setStep("RESULT");
+    if (getQuizProgress(quizData.questions, userAnswers).isComplete) {
+      setStep("RESULT");
+    }
   };
 
   const handleRetry = () => {
@@ -115,6 +126,7 @@ function PersistedQuizContent() {
                 currentQuestionIndex={currentQuestionIndex}
                 userAnswers={userAnswers}
                 onOptionSelect={handleOptionSelect}
+                onQuestionChange={handleQuestionChange}
                 onNext={handleNext}
                 onRetry={() => router.back()}
               />
